@@ -16,17 +16,15 @@
 
 ## 1. Install dependencies
  * 1. `conda install pandas`
- * 2. `conda install shlex`
- * 3. `conda install subprocess`
- * 4. `conda install -c conda-forge ffmpeg`
- * 5. `conda install -c conda-forge opencv`
- * 6. `conda install matplotlib`
- * 7. `conda install pickle`
- * 8. `conda install tqdm`
- * 9. `conda install skimage`
- * 10. `pip install nipype`
- * 11. Download and compile ANTs from (https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/)
- * 12. `git clone https://github.com/SilasiLab/microinfarcts.git`
+ * 2. `conda install -c conda-forge ffmpeg`
+ * 3. `conda install -c conda-forge opencv`
+ * 4. `conda install matplotlib`
+ * 5. `conda install pickle`
+ * 6. `conda install tqdm`
+ * 7. `conda install scikit-image`
+ * 8. `pip install nipype`
+ * 9. Download and compile ANTs from (https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/)
+ * 10. `git clone https://github.com/SilasiLab/microinfarcts.git`
 
 ## 2. Preparatory phase
   * Microinfarcts is based on the result given by imageJ process. The input data should be the result of imageJ process.

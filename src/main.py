@@ -16,7 +16,7 @@ parser.add_argument('--a', help='Apply transform on micro infarcts mask and tiss
 parser.add_argument('--w', help='Write a csv summary, cannot be used alongside show', dest='write_summary', default=True, type=boolean_string)
 parser.add_argument('--sh', help='Show result in a preview window, cannot be used alongside write csv', dest='show', default=False, type=boolean_string)
 parser.add_argument('--shatlats', help='Show an atlas otherwise it will be an annotation', dest='show_atlas', default=False, type=boolean_string)
-parser.add_argument('--intro', help='Show introduction in video frame', dest='intro', default=False, type=boolean_string)
+parser.add_argument('--intro', help='Show introduction in video frame', dest='intro', default=True, type=boolean_string)
 args = parser.parse_args()
 
 root_dir = args.root_dir

@@ -36,7 +36,7 @@
 
 ## 3. User guide
   * 1. Simple guide.
-      * Write a summary:
+      * Write a summary and generate a tree graph in both image and txt format as well:
         * 1. [Input directory]: The folder holds individual brains folders.
         * 2. [Output directory]: A empty folder you would like to save the result.
         * 3. `cd microinfarcts/src`

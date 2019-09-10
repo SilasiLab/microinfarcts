@@ -99,7 +99,7 @@ def load_img(img_dir, post_fix):
 
     return image
 
-def merge_layers(name, save_dir, postfix1='jpg', postfix2='tif', postfix3='npy'):
+def merge_layers(name, save_dir, postfix1='jpg', postfix2='tif', postfix3='npy', intro=True):
     '''
     Use for presenting single brain images
     :param img_dir: The folder holding the brain images
@@ -115,16 +115,21 @@ def merge_layers(name, save_dir, postfix1='jpg', postfix2='tif', postfix3='npy')
     while(True):
         bead_dir = os.path.join(save_dir, name, "post_bead", "%d.%s"%(index, postfix1))
         tissue_dir = os.path.join(save_dir, name, "post_tissue", "%d.%s"%(index, postfix2))
-        ann_dir = os.path.join(save_dir, name, "atlas", "%d.%s"%(index, postfix3))
+
+        if postfix3 == "npy":
+            ann_dir = os.path.join(save_dir, name, "ann", "%d.%s" % (index, postfix3))
+        else:
+            ann_dir = os.path.join(save_dir, name, "atlas", "%d.%s" % (index, postfix3))
 
         bead_frame = load_img(bead_dir, postfix1)
         transformed_frame = load_img(tissue_dir, postfix2)
+
         ann_frame = load_img(ann_dir, postfix3)
 
         img_frame_sum = cv2.addWeighted(bead_frame, 0.5, transformed_frame, 0.5, 0)
         img_frame_sum = cv2.addWeighted(ann_frame, weight, img_frame_sum, 1 - weight, 0)
 
-        key = show_img(img_frame_sum, name, True)
+        key = show_img(img_frame_sum, name, intro)
         if key == 101:
             weight -= 0.01
             if weight < 0:

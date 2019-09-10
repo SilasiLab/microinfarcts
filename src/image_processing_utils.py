@@ -309,16 +309,42 @@ def check_create_dirs(save_dir):
     if not os.path.exists(os.path.join(save_dir, 'output')):
         os.mkdir(os.path.join(save_dir, 'output'))
 
-def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False, Ants_script="/home/silasi/ANTs/Scripts", app_tran=False, write_summary=False, show=False):
+def get_query_dict():
+    """
+    Load query dictionary indicated by id.
+    :return:
+    """
+    query_path = os.path.join("atlas_reference", "query.csv")
+    query_path = os.path.abspath(query_path)
+    query_path = os.path.normpath(query_path)
+    df = pd.read_csv(query_path)
+    query_dict = df.to_dict()
+    processed_dict = {}
+    keys = list(query_dict.keys())
+    keys.remove('id')
+    id_keys = list(query_dict['id'].keys())
+    id_keys.sort()
+    for id_key in id_keys:
+        id = query_dict['id'][id_key]
+        processed_dict[id] = {}
+        for key in keys:
+            processed_dict[id][key] = query_dict[key][id_key]
+    query_dict = processed_dict
+    return query_dict
+
+def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False,
+         Ants_script="/home/silasi/ANTs/Scripts",
+         app_tran=False, write_summary=False, show=False,
+         show_atlas=False, intro=True):
     """
     Show function is not compatible with writing csv funtion. Do one thing at a time.
-    :param root_dir:
-    :param save_dir:
-    :param prepare_atlas_tissue:
-    :param registration:
-    :param app_tran:
-    :param write_summary:
-    :param show:
+    :param root_dir: Directory for handling all animal folders you would like to analyse.
+    :param save_dir: Directory to save the analysed result.
+    :param prepare_atlas_tissue: True for the first time to run on this animal. Set fault to save time after that.
+    :param registration: Default True, use ANTs to align brain. Set as fause in the second time to save time.
+    :param app_tran: Always true.
+    :param write_summary: True for generating summary csv and tree graph.
+    :param show: True for show in opencv frame, cannot be true when write summary.
     :return:
     """
 
@@ -361,19 +387,100 @@ def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False, Ant
                 result_dict = summary_single_section(result_dict, bead, ann)
 
         if write_summary and not show:
-            csv_dict = {"label": [], "number": []}
+            query_dict = get_query_dict()
+            csv_dict = {"label": [], "text_label": [], "number": [],
+                        "structure_id_path": [], "percentage": []}
+
+            total_bead_number = 0.
+            not_found = 0
+
             for key in result_dict:
-                csv_dict["label"].append(key)
-                csv_dict["number"].append(result_dict[key])
+                total_bead_number += result_dict[key]
+
+            for key in result_dict:
+                if key in query_dict.keys():
+                    csv_dict["label"].append(key)
+                    csv_dict["text_label"].append(query_dict[key]['name'])
+                    csv_dict["structure_id_path"].append(query_dict[key]['structure_id_path'])
+                    csv_dict["number"].append(result_dict[key])
+                    csv_dict["percentage"].append(float(result_dict[key]) / total_bead_number)
+                else:
+                    not_found += result_dict[key]
+                    print("ID:" + str(key) + " Not found, containing bead: %d" % result_dict[key])
+
+            draw_tree_graph(csv_dict, save_directory, query_dict)
+
+            csv_dict["label"].append("nan")
+            csv_dict["text_label"].append("Background")
+            csv_dict["structure_id_path"].append("nan")
+            csv_dict["number"].append(not_found)
+            csv_dict["percentage"].append(float(not_found) / total_bead_number)
             df = pd.DataFrame(csv_dict)
             df.to_csv(os.path.join(save_directory, "summary.csv"))
 
         if show:
-            merge_layers(name, save_dir, 'nii', 'nii', 'tif')
+            if not show_atlas:
+                merge_layers(name, save_dir, 'nii', 'nii', 'npy', intro)
+            else:
+                merge_layers(name, save_dir, 'nii', 'nii', 'tif', intro)
 
+def draw_tree_graph(csv_dict, save_directory, query_dict):
+    """
+    Only utilize it when you want to generate a tree graph.
+    :param csv_dict:
+    :param save_directory:
+    :param query_dict:
+    :return:
+    """
+    from anytree import Node, RenderTree, AsciiStyle, LevelOrderIter
+    from anytree.exporter import DotExporter
+    tree_path_list = csv_dict["structure_id_path"]
+    count_list = csv_dict["number"]
+    label_list = csv_dict["label"]
+    percentage_list = csv_dict["percentage"]
+    node_dict = {}
+    root_node = None
+
+    for path_index in range(len(tree_path_list)):
+        tree_path = tree_path_list[path_index]
+        node_list = [int(item) for item in tree_path.split('/')[1: -1]]
+        for i in range(len(node_list)):
+            node_id = node_list[i]
+            if node_id not in node_dict.keys():
+                if node_id in query_dict.keys():
+                    node_name = query_dict[node_id]['name']
+                else:
+                    node_name = str(node_id)
+
+                if i == len(node_list) - 1:
+                    node_dict[node_id] = Node(node_name, parent=node_dict[node_list[i - 1]],
+                                              count=count_list[path_index],
+                                              percentage=percentage_list[path_index])
+                else:
+                    if i == 0:
+                        root_node = Node(node_name, count=0, percentage=.0)
+                        node_dict[node_id] = root_node
+                    else:
+                        node_dict[node_id] = Node(node_name, parent=node_dict[node_list[i - 1]],
+                                                  count=0, percentage=.0)
+                    if node_id in label_list:
+                        Node(node_name + "_other", parent=node_dict[node_id],
+                             count=count_list[label_list.index(node_id)],
+                             percentage=percentage_list[label_list.index(node_id)])
+
+    node_level_order_list = list(LevelOrderIter(root_node))
+    for i in range(len(node_level_order_list) - 1, 0, -1):
+        node_level_order_list[i].parent.count += node_level_order_list[i].count
+        node_level_order_list[i].parent.percentage += node_level_order_list[i].percentage
+
+
+    def nodenamefunc(node):
+        return '%s, beads number:%2d, beads percentage: %.5f %%' % (node.name, node.count, node.percentage*100.)
+    DotExporter(root_node, nodenamefunc=nodenamefunc).to_picture(os.path.join(save_directory, "tree.png"))
+    with open(os.path.join(save_directory, 'tree.txt'), 'w') as f:
+        for pre, _, node in RenderTree(root_node):
+            f.write('%s:%s, beads number:%2d, beads percentage: %.5f %% \n' % (pre, node.name, node.count, node.percentage*100.))
 
 if __name__ == '__main__':
+    pass
 
-    root_dir = "/home/silasi/brain_imgs/"
-    save_dir = "/home/silasi/ants_data/"
-    main(root_dir, save_dir, show=True, app_tran=False)

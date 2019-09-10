@@ -55,3 +55,5 @@
       * `--a`: Apply the trasform matrix calculated in ANTs registration on mask of micro infarcts as well as the tissue image. Default is `True`. Please always set it as `True` to avoide hindering the next process.
       * `--w`: Write the registraion result into a csv file. This function is not compatible with `show` function. So the parameter `--w` cannot be set as `True` while `--sh` is already set to `True`. 
       * `--sh`: Show the alignment and registration result in a opencv window. This function is not compatible with `write_summary` function. So the parameter `--sh` cannot be set as `True` while `--w` is already set to `True`. 
+      * `--shatlas`: Show Allen atlas or annotation as reference background.
+      * `--intro`: Show introduction on opencv frame or not, Default is True.

@@ -7,18 +7,183 @@ Organization: Silasi Lab
 '''
 # The pixel poistion of the original point in allen atlas
 ATLAS_CERTER_POSITION = (208, 212, 228)
-import pandas as pd
 import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from tifffile import imsave
 import pickle as pk
-from tqdm import tqdm
 import skimage.io as io
 from present import show_img, merge_layers, load_img
 from bead_finder import save_bead_mask
 from ants_utils import quick, apply_transform
+import scipy.fftpack as fp
+import pandas as pd
+from tqdm import tqdm
+
+
+def pixel2mm(point, centre_point, pixel2mm=0.005464):
+    '''
+    transform the point in Mathew's scale to pixel scale
+    :param point: The point you would like to transform
+    :param centre_point: The center point of the image
+    :param pixel2mm: The ratio for scaling
+    :return:
+    '''
+    mm_x = (float(centre_point[0]) - float(point[0])) * pixel2mm
+    mm_y = (float(centre_point[1]) - float(point[1])) * pixel2mm
+    return [mm_x, mm_y]
+
+def remove_background(img_frame):
+    '''
+    Transform the position of the brain in the atlas frame to adapt image frame
+    :param img_frame:
+    :param atlas_frame:
+    :return:
+    '''
+    # img_frame = cv2.cvtColor(img_frame, cv2.COLOR_BGR2GRAY)
+    threshold = get_adaptive_threshold(img_frame)
+    ret, th = cv2.threshold(img_frame, threshold, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((7, 7), np.uint8)
+    th = cv2.erode(th, kernel, iterations=2)
+    _, contours, _ = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    tissue_frame = img_frame.copy()
+    for i in range(len(contours)):
+        if cv2.contourArea(contours[i]) > 2e5 and cv2.contourArea(contours[i]) < 1e7:
+            x_t, y_t, w_t, h_t = cv2.boundingRect(contours[i])
+            point_t = (int(x_t + 0.5 * w_t), int(y_t + 0.5 * h_t))
+            if is_in_center(point_t, tissue_frame):
+                x, y, w, h = cv2.boundingRect(contours[i])
+                tissue_frame[:, 0: x] = 0
+                tissue_frame[:, x + w:] = 0
+                tissue_frame[0:y, :] = 0
+                tissue_frame[y + h:, :] = 0
+                mask = np.zeros(tissue_frame.shape).astype(np.uint8)
+                cv2.drawContours(mask, [contours[i]], -1, 255, -1)
+                tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+    return tissue_frame
+
+def read_img(file_path):
+    img = cv2.imread(file_path)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    return img
+
+def fft(img, frequency_threshold=10, brightness_threshold=40, show=False):
+    F1 = fp.fft2((img).astype(float))
+    F2 = fp.fftshift(F1)
+    (w, h) = img.shape
+    half_w, half_h = int(w / 2), int(h / 2)
+    # high pass filter
+    n = frequency_threshold
+    F2[half_w - n:half_w + n + 1, half_h - n:half_h + n + 1] = 0  # select all but the first 50x50 (low) frequencies
+    im1 = fp.ifft2(fp.ifftshift(F2)).real
+    # im1 = im1.astype('uint8')
+    retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY)
+    # retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    threshold = threshold.astype('uint8')
+    img = img.astype('uint8')
+    markers = open_operation(img, threshold)
+
+    markers1 = markers.astype(np.uint8)
+    ret, m2 = cv2.threshold(markers1, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    _, contours, hierarchy = cv2.findContours(m2, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+    canvas = np.zeros((img.shape[0], img.shape[1], 3))
+    canvas[:, :, 0] = img
+    canvas[:, :, 1] = img
+    canvas[:, :, 2] = img
+    canvas = canvas.astype(np.uint8)
+    coor_list = []
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area < 400:
+            M = cv2.moments(c)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            if show:
+                cv2.drawContours(canvas, c, -1, (0, 255, 0), 1)
+                cv2.circle(canvas, (cX, cY), 1, (255, 0, 0), -1)
+            if [cX, cY] not in coor_list:
+                coor_list.append([cX, cY])
+    if show:
+        result = [m2, canvas]
+        show_imgs(result)
+    return coor_list
+
+def open_operation(img, thresh):
+    kernel = np.ones((3, 3), np.uint8)
+    opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+    # sure background area
+    sure_bg = cv2.dilate(opening, kernel, iterations=1)
+    # Finding sure foreground area
+    dist_transform = cv2.distanceTransform(opening, cv2.DIST_L2, 0)
+    ret, sure_fg = cv2.threshold(dist_transform, 2.4, 255, 0)
+    # Finding unknown region
+    sure_fg = np.uint8(sure_fg)
+    unknown = cv2.subtract(sure_bg, sure_fg)
+    # Marker labelling
+    ret, markers = cv2.connectedComponents(sure_fg)
+    # Add one to all labels so that sure background is not 0, but 1
+    markers = markers + 1
+    # Now, mark the region of unknown with zero
+    markers[unknown == 255] = 0
+    canvas = np.zeros((img.shape[0], img.shape[1], 3))
+    canvas[:, :, 0] = img
+    canvas[:, :, 1] = img
+    canvas[:, :, 2] = img
+    canvas = canvas.astype(np.uint8)
+    markers = cv2.watershed(canvas, markers)
+    return markers
+
+def show_imgs(img_list):
+    img_num = len(img_list)
+    row = 1
+    col = img_num / 2 + 1
+    plt.figure(figsize=(20, 16))
+
+    for i in range(img_num):
+        plt.subplot(row, col, i + 1)
+        plt.imshow(img_list[i], cmap='gray')
+
+    plt.axis('off')
+    plt.show()
+
+def locate_beads(img_path_list, output_csv_folder):
+    data_dict = {"Animal ID": [], "Mean": [], "X": [], "Y": [], "Z": [], "Bead Area":[], "Bead Circularity":[]}
+    def key(item):
+        return float(os.path.basename(item).split(',')[-1].strip().replace('.tif', ''))
+    img_path_list.sort(key=key)
+
+    for img_path in tqdm(img_path_list):
+        animal_id = os.path.basename(img_path).split(',')[0].strip('_')
+        z = key(img_path)
+        img = read_img(img_path)
+        img = remove_background(img)
+        xy_list = fft(img, 30, 30)
+        for tu in xy_list:
+            centre_point = (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5))
+            pixel_value = img[tu[1], tu[0]]
+            tu = pixel2mm(tu, centre_point)
+            tu.append(z)
+            data_dict["Animal ID"].append(animal_id)
+            data_dict["Mean"].append(pixel_value)
+            data_dict["X"].append(tu[0])
+            data_dict["Y"].append(tu[1])
+            data_dict["Z"].append(tu[2])
+            data_dict["Bead Area"].append(0)
+            data_dict["Bead Circularity"].append(0)
+    df = pd.DataFrame.from_dict(data_dict)
+    df.to_csv(os.path.join(output_csv_folder, 'auto_segmentation.csv'), index=False)
+
+def segment_bead_csv(root_dir):
+    print("Computing segmentation using Fourier transform...")
+    img_root_dir = os.path.join(root_dir, "3 - Processed Images/7 - Counted Reoriented Stacks Renamed")
+    img_path_list = []
+    out_put_folder = os.path.join(root_dir, "5 - Data")
+    for img_dir in os.listdir(img_root_dir):
+        if img_dir.endswith(".tif"):
+            img_path_list.append(os.path.join(img_root_dir, img_dir))
+    locate_beads(img_path_list, out_put_folder)
 
 def is_in_center(centerPonit, real_img):
     '''
@@ -29,7 +194,7 @@ def is_in_center(centerPonit, real_img):
     '''
     x = float(real_img.shape[1] * 0.5)
     y = float(real_img.shape[0] * 0.5)
-    if (centerPonit[0] > (x * 0.6)) and (centerPonit[0] < (x * 1.4)) and (centerPonit[1] > (y * 0.4)) and (centerPonit[1] < (y * 1.4)):
+    if (centerPonit[0] > (x * 0.6)) and (centerPonit[0] < (x * 1.4)) and (centerPonit[1] > (y * 0.4)) and (centerPonit[1] < (y * 1.2)):
         return True
     else:
         return False
@@ -100,17 +265,21 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
     img_frame = cv2.cvtColor(img_frame, cv2.COLOR_BGR2GRAY)
     threshold = get_adaptive_threshold(img_frame)
     ret, th = cv2.threshold(img_frame, threshold, 255, cv2.THRESH_BINARY)
+
+
     kernel = np.ones((7, 7), np.uint8)
     th = cv2.erode(th, kernel, iterations=2)
     _, contours, _ = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-
     tissue_frame = img_frame.copy()
 
+    # show_img(th, False)
+
     for i in range(len(contours)):
-        if cv2.contourArea(contours[i]) > 2e5 and cv2.contourArea(contours[i]) < 1e7:
+        if cv2.contourArea(contours[i]) > 2e5 and cv2.contourArea(contours[i]) < 5e6:
             x_t, y_t, w_t, h_t = cv2.boundingRect(contours[i])
             point_t = (int(x_t + 0.5 * w_t), int(y_t + 0.5 * h_t))
+
             if is_in_center(point_t, tissue_frame):
                 x, y, w, h = cv2.boundingRect(contours[i])
                 tissue_frame[:, 0: x] = 0
@@ -121,20 +290,32 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
                 cv2.drawContours(mask, [contours[i]], -1, 255, -1)
                 tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
                 if show:
+                    print("normal")
                     cv2.rectangle(tissue_frame, (x, y), (x + w, y + h), (255, 255, 0), 5)
                     show_img(tissue_frame, False)
+
+    # show_tissue_frame = cv2.resize(tissue_frame, (int(tissue_frame.shape[1] * 0.5), int(tissue_frame.shape[0] * 0.5)))
+    # cv2.imshow('tissue', show_tissue_frame)
+    # cv2.waitKey()
 
     cur_h = 0
     cur_w = 0
     (height, length) = atlas_frame.shape
+
+    # show_img(atlas_frame, False)
+
     for row in range(height):
         if np.asarray(atlas_frame[row, :]).sum() > 0:
             cur_h += 1
     for col in range(length):
         if np.asarray(atlas_frame[:, col]).sum() > 0:
             cur_w += 1
+    #
+    # print(w, cur_w)
+    # print(h, cur_h)
+
     try:
-        w_factor = float(w)/float(cur_w)
+        w_factor = float(w) / float(cur_w)
         h_factor = float(h) / float(cur_h)
     except:
         tissue_frame = img_frame.copy()
@@ -142,15 +323,24 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
         for i in range(len(contours)):
             x, y, w, h = cv2.boundingRect(contours[i])
             cv2.rectangle(tissue_frame, (x, y), (x + w, y + h), (255, 255, 0), 5)
+            print("exception")
             show_img(tissue_frame, False)
+
+    # print(w_factor, h_factor)
 
     refactored_atlas_center = (int(ATLAS_CERTER_POSITION[2] * w_factor), int(ATLAS_CERTER_POSITION[1] * h_factor))
 
     atlas_frame = cv2.resize(atlas_frame, (int(atlas_frame.shape[1] * w_factor), int(atlas_frame.shape[0] * h_factor)), interpolation=cv2.INTER_NEAREST)
     ann_frame = cv2.resize(ann_frame, (int(ann_frame.shape[1] * w_factor), int(ann_frame.shape[0] * h_factor)), interpolation=cv2.INTER_NEAREST)
 
+    # print(atlas_frame.shape)
+
     atlas_frame, atlas_center = get_pure_brain_atlas(atlas_frame, refactored_atlas_center)
     ann_frame, _ = get_pure_brain_atlas(ann_frame, refactored_atlas_center)
+
+    # print(atlas_frame.shape)
+    # print("===========")
+    # show_img(atlas_frame, False)
 
     canvas_atlas = np.zeros((img_frame.shape[0], img_frame.shape[1])).astype(np.uint8)
     canvas_ann = np.zeros((img_frame.shape[0], img_frame.shape[1])).astype(np.uint16)
@@ -316,6 +506,7 @@ def get_query_dict():
     """
     query_path = os.path.join("atlas_reference", "query.csv")
     query_path = os.path.abspath(query_path)
+    query_path = query_path.replace("/src", "")
     query_path = os.path.normpath(query_path)
     df = pd.read_csv(query_path)
     query_dict = df.to_dict()
@@ -335,7 +526,7 @@ def get_query_dict():
 def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False,
          Ants_script="/home/silasi/ANTs/Scripts",
          app_tran=False, write_summary=False, show=False,
-         show_atlas=False, intro=True):
+         show_atlas=False, intro=True, auto_seg=True):
     """
     Show function is not compatible with writing csv funtion. Do one thing at a time.
     :param root_dir: Directory for handling all animal folders you would like to analyse.
@@ -354,10 +545,9 @@ def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False,
         img_dir = os.path.join(root_dir, name, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
         save_directory = os.path.join(save_dir, name)
         check_create_dirs(save_directory)
-
-        save_bead_mask(save_directory, os.path.join(root_dir, name), show_circle=show)
-
-
+        if auto_seg:
+            segment_bead_csv(os.path.join(root_dir, name))
+        save_bead_mask(save_directory, os.path.join(root_dir, name), show_circle=show, auto=auto_seg)
         if prepare_atlas_tissue:
             prepare_atlas()
             save_pair_images(img_dir, save_dir=save_directory)
@@ -480,6 +670,96 @@ def draw_tree_graph(csv_dict, save_directory, query_dict):
     with open(os.path.join(save_directory, 'tree.txt'), 'w') as f:
         for pre, _, node in RenderTree(root_node):
             f.write('%s:%s, beads number:%2d, beads percentage: %.5f %% \n' % (pre, node.name, node.count, node.percentage*100.))
+
+def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=False,
+         Ants_script="/home/silasi/ANTs/Scripts",
+         app_tran=False, write_summary=False, show=False,
+         show_atlas=False, intro=True, auto_seg=True):
+    """
+    Show function is not compatible with writing csv funtion. Do one thing at a time.
+    :param brain_dir: Directory for handling the brain you would like to analyse.
+    :param save_dir: Directory to save the analysed result.
+    :param prepare_atlas_tissue: True for the first time to run on this animal. Set fault to save time after that.
+    :param registration: Default True, use ANTs to align brain. Set as fause in the second time to save time.
+    :param app_tran: Always true.
+    :param write_summary: True for generating summary csv and tree graph.
+    :param show: True for show in opencv frame, cannot be true when write summary.
+    :return:
+    """
+    brain_name = os.path.basename(brain_dir)
+    assert not (show and write_summary), "Show function is not compatible with sumarry function"
+
+    img_dir = os.path.join(brain_dir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
+    save_directory = os.path.join(save_dir, brain_name)
+    check_create_dirs(save_directory)
+    if auto_seg:
+        segment_bead_csv(os.path.join(brain_dir))
+    save_bead_mask(save_directory, os.path.join(brain_dir), show_circle=show, auto=auto_seg)
+    if prepare_atlas_tissue:
+        prepare_atlas()
+        save_pair_images(img_dir, save_dir=save_directory)
+
+    result_dict = None
+    length = len(os.listdir(os.path.join(save_directory, 'atlas')))
+    for i in tqdm(range(length)):
+        atlas_dir = os.path.join(save_directory, 'atlas' + os.sep + '%d.tif' % i)
+        tissue_dir = os.path.join(save_directory, 'tissue' + os.sep + '%d.tif' % i)
+
+        output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
+
+        if registration:
+            quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
+
+        transforms = [os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '0GenericAffine.mat'),
+                      os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '1Warp.nii.gz')]
+        bead_dir = os.path.join(save_directory, 'bead' + os.sep + '%d.tif' % i)
+
+        if app_tran:
+            apply_transform(bead_dir, atlas_dir, transforms, os.path.join(save_directory, "post_bead" + os.sep + "%d.nii" % i))
+            apply_transform(tissue_dir, atlas_dir, transforms, os.path.join(save_directory, "post_tissue" + os.sep + "%d.nii"%i))
+
+        if write_summary and not show:
+            bead = load_img(os.path.join(save_directory, "post_bead", "%d.nii"%i), 'nii')
+            ann = np.load(os.path.join(save_directory, "ann", "%d.npy" % i))
+            result_dict = summary_single_section(result_dict, bead, ann)
+
+    if write_summary and not show:
+        query_dict = get_query_dict()
+        csv_dict = {"label": [], "text_label": [], "number": [],
+                    "structure_id_path": [], "percentage": []}
+
+        total_bead_number = 0.
+        not_found = 0
+
+        for key in result_dict:
+            total_bead_number += result_dict[key]
+
+        for key in result_dict:
+            if key in query_dict.keys():
+                csv_dict["label"].append(key)
+                csv_dict["text_label"].append(query_dict[key]['name'])
+                csv_dict["structure_id_path"].append(query_dict[key]['structure_id_path'])
+                csv_dict["number"].append(result_dict[key])
+                csv_dict["percentage"].append(float(result_dict[key]) / total_bead_number)
+            else:
+                not_found += result_dict[key]
+                print("ID:" + str(key) + " Not found, containing bead: %d" % result_dict[key])
+
+        draw_tree_graph(csv_dict, save_directory, query_dict)
+
+        csv_dict["label"].append("nan")
+        csv_dict["text_label"].append("Background")
+        csv_dict["structure_id_path"].append("nan")
+        csv_dict["number"].append(not_found)
+        csv_dict["percentage"].append(float(not_found) / total_bead_number)
+        df = pd.DataFrame(csv_dict)
+        df.to_csv(os.path.join(save_directory, "summary.csv"))
+
+    if show:
+        if not show_atlas:
+            merge_layers(brain_name, save_dir, 'nii', 'nii', 'npy', intro)
+        else:
+            merge_layers(brain_name, save_dir, 'nii', 'nii', 'tif', intro)
 
 if __name__ == '__main__':
     pass

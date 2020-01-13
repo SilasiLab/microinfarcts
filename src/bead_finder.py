@@ -282,7 +282,7 @@ def mm2pixel(point, centre_point, pixel2mm=0.005464):
     return (pixel_x, pixel_y)
 
 
-def get_pixel_points_layer_dict(rootDir):
+def get_pixel_points_layer_dict(rootDir, auto=False):
     '''
     **** important function
     **** perhaps need to be determined which to show (The start of sequence or the end)
@@ -292,10 +292,15 @@ def get_pixel_points_layer_dict(rootDir):
     '''
 
     csv_dir_root = os.path.join(rootDir, "5 - Data")
-    for item in os.listdir(csv_dir_root):
-        if 'Location' in item:
-            csv_dir = os.path.join(csv_dir_root, item)
-            break
+    if not auto:
+        for item in os.listdir(csv_dir_root):
+            if 'Location' in item:
+                csv_dir = os.path.join(csv_dir_root, item)
+                break
+    else:
+        assert os.path.exists(os.path.join(csv_dir_root, "auto_segmentation.csv"))
+        csv_dir = os.path.join(csv_dir_root, "auto_segmentation.csv")
+
     data_frame = load_data(csv_dir)
 
     bead_list = find_real_bead(data_frame, deliation_factor=3, ignore_disconnected=1, tolerance=0.3)
@@ -381,10 +386,9 @@ def layer_dict_2_mask(rootDir, layer_dict, show=False, save_dir=None, show_circl
             imsave(os.path.join(save_dir, str(index)+".tif"), save_img_list[i])
             index += 1
 
-def save_bead_mask(saveDir, rootDir = "/home/silasi/brain_imgs/66148-2", show_circle=False):
-    layer_dict = get_pixel_points_layer_dict(rootDir)
+def save_bead_mask(saveDir, rootDir = "/home/silasi/brain_imgs/66148-2", show_circle=False, auto=False):
+    layer_dict = get_pixel_points_layer_dict(rootDir, auto=auto)
     layer_dict_2_mask(rootDir, layer_dict, False, save_dir=saveDir, show_circle=show_circle)
-
 
 
 if __name__ == '__main__':

@@ -172,6 +172,7 @@ def plot_beads_on_tissue(img_dir, csv_dir):
         cv2.waitKey()
 
 
+
 if __name__ == '__main__':
     # plot_beads_on_tissue('/home/silasi/ants_data/66148-2/tissue', '/home/silasi/ants_data/66148-2/bead')
     load_img("/home/silasi/ants_data/66148-2/ann/123.npy", "npy")

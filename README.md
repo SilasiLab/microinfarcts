@@ -23,8 +23,10 @@
  * 6. `conda install tqdm`
  * 7. `conda install scikit-image`
  * 8. `pip install nipype`
- * 9. Download and compile ANTs from (https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/)
- * 10. `git clone https://github.com/SilasiLab/microinfarcts.git`
+ * 9. `conda install pyqt5`
+ * 10. `conda install tk`
+ * 11. Download and compile ANTs from (https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/)
+ * 12. `git clone https://github.com/SilasiLab/microinfarcts.git`
 
 ## 2. Preparatory phase
   * Microinfarcts is based on the result given by imageJ process. The input data should be the result of imageJ process.
@@ -33,7 +35,10 @@
   * 2. `root directory/[brain id](individual brain)/5 - Data/[brain id] - Manual Bead Location Data v0.1.4 - Dilation Factor 0.csv`
   * Note: The first directory should contain the brain images aligned by imageJ. And under the second one there should be a csv containing the human labeled micro infarcts loaction.
   * After downloading as well as compiling ANTs, you should find the dirctory of `antsRegistrationSyNQuick.sh` under ANTs `Scripts` folder. Take this PC as an example, it is `/home/silasi/ANTs/Scripts/antsRegistrationSyNQuick.sh`. Then the folder containing `antsRegistrationSyNQuick.sh`, that is `/home/silasi/ANTs/Scripts/` which will be used as the parameter `--ant` of the whole project. Here we leave it as [Script folder] for short and for future use.
-
+## 3. Simple GUI
+  * 1. `cd [your directory]/microinfarcts/src`
+  * 2. `python gui.py`
+  * 3. ![Gui](/pics/gui.png)
 ## 3. User guide
   * 1. Simple guide.
       * Write a summary and generate a tree graph in both image and txt format as well:

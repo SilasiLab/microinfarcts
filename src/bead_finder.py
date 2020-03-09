@@ -291,12 +291,14 @@ def get_pixel_points_layer_dict(rootDir, auto=False):
     :return: a dictionary
     '''
 
-    csv_dir_root = os.path.join(rootDir, "5 - Data")
+    csv_dir_root = os.path.join(rootDir, "data")
     if not auto:
-        for item in os.listdir(csv_dir_root):
-            if 'Location' in item:
-                csv_dir = os.path.join(csv_dir_root, item)
-                break
+        # for item in os.listdir(csv_dir_root):
+        #     if 'Location' in item:
+        #         csv_dir = os.path.join(csv_dir_root, item)
+        #         break
+        assert os.path.exists(os.path.join(csv_dir_root, "manual_segmentation.csv"))
+        csv_dir = os.path.join(csv_dir_root, "manual_segmentation.csv")
     else:
         assert os.path.exists(os.path.join(csv_dir_root, "auto_segmentation.csv"))
         csv_dir = os.path.join(csv_dir_root, "auto_segmentation.csv")
@@ -304,7 +306,7 @@ def get_pixel_points_layer_dict(rootDir, auto=False):
     data_frame = load_data(csv_dir)
 
     bead_list = find_real_bead(data_frame, deliation_factor=3, ignore_disconnected=1, tolerance=0.3)
-    img_dir = os.path.join(rootDir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
+    img_dir = os.path.join(rootDir, "processed")
     origin = calculate_origin(img_dir)
     def depth_key(elem):
         return elem.end_z
@@ -326,7 +328,7 @@ def plot_layer_dict_on_img(rootDir, layer_dict):
     :param layer_dict:
     :return:
     '''
-    img_dir = os.path.join(rootDir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
+    img_dir = os.path.join(rootDir, "processed")
 
     def z_key(elem):
         return float(elem.split(',')[-1].strip().split('.tif')[0])
@@ -348,7 +350,7 @@ def layer_dict_2_mask(rootDir, layer_dict, show=False, save_dir=None, show_circl
     :param layer_dict:
     :return:
     '''
-    img_dir = os.path.join(rootDir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
+    img_dir = os.path.join(rootDir, "processed")
 
     def z_key(elem):
         return float(elem.split(',')[-1].strip().split('.tif')[0])

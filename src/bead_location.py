@@ -65,7 +65,6 @@ def fft(img, frequency_threshold=10, brightness_threshold=40, show=False):
     im1 = fp.ifft2(fp.ifftshift(F2)).real
     # im1 = im1.astype('uint8')
     retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY)
-    # retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     threshold = threshold.astype('uint8')
     img = img.astype('uint8')
     markers = open_operation(img, threshold)

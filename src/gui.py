@@ -11,7 +11,9 @@ import os
 from image_processing_utils import run_one_brain
 
 class StartWindow(QMainWindow):
-
+    """
+    Main entrance of the whole process.
+    """
     def __init__(self):
         super().__init__()
         self.root_dir = "/mnt/4T/brain_imgs/"
@@ -35,8 +37,8 @@ class StartWindow(QMainWindow):
         self.radio_write.setChecked(True)
 
         self.buttonGroupAutoSeg = QButtonGroup(self.widget_main)
-        self.radio_auto = QRadioButton("Auto Segmentation")
-        self.radio_man = QRadioButton("Use existing manual label")
+        self.radio_auto = QRadioButton("Auto Beads Labeling")
+        self.radio_man = QRadioButton("Manual Beads Labeling")
         self.radio_auto.setChecked(True)
 
         self.labelRootDir = QLabel("Select root directory containing all the brain folders")
@@ -123,11 +125,6 @@ class StartWindow(QMainWindow):
             run_one_brain(brain_dir, self.save_dir, True, True, self.script_dir, True, self.radio_write.isChecked(),
                           self.radio_show.isChecked(), False, False, self.radio_auto.isChecked())
 
-if __name__ == '__main__':
-    app = QApplication([])
-    start_window = StartWindow()
-    start_window.show()
-    app.exit(app.exec_())
 
 
 

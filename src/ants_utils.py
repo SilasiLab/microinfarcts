@@ -27,6 +27,7 @@ def quick(dir_fix_image='/home/silasi/ants_data/nrrd/0.tif', dir_moving_img='/ho
     reg.inputs.num_threads = 16
     command = os.path.join(ANTs_script, reg.cmdline)
     args = shlex.split(command)
+    print(command)
     p = subprocess.Popen(args)
     p.wait()
 

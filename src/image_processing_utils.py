@@ -20,7 +20,13 @@ from ants_utils import quick, apply_transform
 import scipy.fftpack as fp
 import pandas as pd
 from tqdm import tqdm
+from preprocess import prepare_tissue_image
+import copy
+from enum import Enum
 
+# global variables for drawing
+drawing = False
+x1, y1, x2, y2 = 0, 0, 0, 0
 
 def pixel2mm(point, centre_point, pixel2mm=0.005464):
     '''
@@ -64,11 +70,24 @@ def remove_background(img_frame):
     return tissue_frame
 
 def read_img(file_path):
+    """
+    Load an image and convert the color channel of it.
+    :param file_path:
+    :return:
+    """
     img = cv2.imread(file_path)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     return img
 
 def fft(img, frequency_threshold=10, brightness_threshold=40, show=False):
+    """
+    Perform Fourier transform and also locate the little shinny beads in the image.
+    :param img:
+    :param frequency_threshold:
+    :param brightness_threshold:
+    :param show:
+    :return:
+    """
     F1 = fp.fft2((img).astype(float))
     F2 = fp.fftshift(F1)
     (w, h) = img.shape
@@ -77,9 +96,9 @@ def fft(img, frequency_threshold=10, brightness_threshold=40, show=False):
     n = frequency_threshold
     F2[half_w - n:half_w + n + 1, half_h - n:half_h + n + 1] = 0  # select all but the first 50x50 (low) frequencies
     im1 = fp.ifft2(fp.ifftshift(F2)).real
-    # im1 = im1.astype('uint8')
+
     retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY)
-    # retval, threshold = cv2.threshold(im1, brightness_threshold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
     threshold = threshold.astype('uint8')
     img = img.astype('uint8')
     markers = open_operation(img, threshold)
@@ -111,6 +130,12 @@ def fft(img, frequency_threshold=10, brightness_threshold=40, show=False):
     return coor_list
 
 def open_operation(img, thresh):
+    """
+    Try to separate the beads.
+    :param img:
+    :param thresh:
+    :return:
+    """
     kernel = np.ones((3, 3), np.uint8)
     opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
     # sure background area
@@ -136,6 +161,11 @@ def open_operation(img, thresh):
     return markers
 
 def show_imgs(img_list):
+    """
+    Show images
+    :param img_list:
+    :return:
+    """
     img_num = len(img_list)
     row = 1
     col = img_num / 2 + 1
@@ -149,7 +179,13 @@ def show_imgs(img_list):
     plt.show()
 
 def locate_beads(img_path_list, output_csv_folder):
-    data_dict = {"Animal ID": [], "Mean": [], "X": [], "Y": [], "Z": [], "Bead Area":[], "Bead Circularity":[]}
+    """
+    integrated processes for automatically locating the beads in the images.
+    :param img_path_list: a list of aligned images
+    :param output_csv_folder: the folder for saving csv result.
+    :return:
+    """
+    data_dict = {"Animal ID": [], "Mean": [], "X": [], "Y": [], "Z": [], "Bead Area": [], "Bead Circularity": []}
     def key(item):
         return float(os.path.basename(item).split(',')[-1].strip().replace('.tif', ''))
     img_path_list.sort(key=key)
@@ -175,15 +211,174 @@ def locate_beads(img_path_list, output_csv_folder):
     df = pd.DataFrame.from_dict(data_dict)
     df.to_csv(os.path.join(output_csv_folder, 'auto_segmentation.csv'), index=False)
 
-def segment_bead_csv(root_dir):
-    print("Computing segmentation using Fourier transform...")
-    img_root_dir = os.path.join(root_dir, "3 - Processed Images/7 - Counted Reoriented Stacks Renamed")
+def click_and_draw_line(event, x, y, flags, param):
+    """
+    Painting method in OpenCv
+    :param event:
+    :param x:
+    :param y:
+    :param flags:
+    :param param:
+    :return:
+    """
+    global x1, y1, x2, y2, drawing
+    if event == cv2.EVENT_LBUTTONDOWN:
+        x1 = x
+        y1 = y
+        x2 = x
+        y2 = y
+        drawing = True
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if(drawing):
+            x2 = x
+            y2 = y
+    elif event == cv2.EVENT_LBUTTONUP:
+        drawing = False
+
+def locate_beads_manual(img_path_list, output_csv_folder):
+    """
+    Method for manual locating the beads
+    :param img_path_list: a list of aligned images.
+    :param output_csv_folder: a folder for saving output csv files.
+    :return:
+    """
+    global x1, y1, x2, y2, drawing
+    data_dict = {"Animal ID": [], "Mean": [], "X": [], "Y": [], "Z": [], "Bead Area":[], "Bead Circularity":[]}
+    def key(item):
+        return float(os.path.basename(item).split(',')[-1].strip().replace('.tif', ''))
+    img_path_list.sort(key=key)
+
+    class Enhanced_image:
+        def __init__(self, animal_id, z_key, image, bead_list=[]):
+            self.animal_id = animal_id
+            self.z_key = z_key
+            self.image = image
+            self.bead_list = bead_list
+
+    class Bead:
+        def __init__(self, x, y, scale):
+            assert scale != 0
+            self._x = float(x) / float(scale)
+            self._y = float(y) / float(scale)
+            self.scale = scale
+        @property
+        def x(self):
+            return int(self._x)
+
+        @property
+        def y(self):
+            return int(self._y)
+
+        @property
+        def x_show(self):
+            return int(self._x * self.scale)
+
+        @property
+        def y_show(self):
+            return int(self._y * self.scale)
+
+    class Brush:
+        Color_labeled = (0, 255, 0)
+        Color_unlabeled = (255, 0, 0)
+        Point_size_labeled = 5
+        Point_size_unlabeled = 3
+
+    enhanced_image_list = []
+    cv2.namedWindow("Label the beads")
+    cv2.setMouseCallback("Label the beads", click_and_draw_line)
+    for img_path in tqdm(img_path_list):
+        animal_id = os.path.basename(img_path).split(',')[0].strip('_')
+        z = key(img_path)
+        img = read_img(img_path)
+        img = remove_background(img)
+        enhanced_image_list.append(Enhanced_image(animal_id, z, img, []))
+
+
+    viewing_flag = True
+    viewing_pos = 0
+    scale = 0.5
+    while viewing_flag:
+
+        while True:
+            show_img = copy.deepcopy(enhanced_image_list[viewing_pos].image)
+            show_img = cv2.resize(show_img, (int(show_img.shape[1] * scale), int(show_img.shape[0] * scale)))
+            for bead in enhanced_image_list[viewing_pos].bead_list:
+                cv2.line(show_img, (bead.x_show, bead.y_show), (bead.x_show, bead.y_show), Brush.Color_labeled,
+                         thickness=Brush.Point_size_labeled)
+
+
+            cv2.putText(show_img, "Pos: %3d" % viewing_pos, (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+            cv2.putText(show_img, "Press S to save current point", (50, 80),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+            cv2.putText(show_img, "Press E to erase last point", (50, 110),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+            cv2.putText(show_img, "Press Q to quit and save all", (50, 140),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+            cv2.putText(show_img, "Others: Press A and D to go previous or next", (50, 170),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+            cv2.line(show_img, (x1, y1), (x1, y1), Brush.Color_unlabeled, thickness=Brush.Point_size_unlabeled)
+            cv2.imshow("Label the beads", show_img)
+
+            key = cv2.waitKey(20) & 0xFF
+            if key == ord('a'):
+                viewing_pos -= 1
+                if viewing_pos == -1:
+                    viewing_pos = len(enhanced_image_list) - 1
+                break
+            elif key == ord('d'):
+                viewing_pos += 1
+                if viewing_pos == len(enhanced_image_list):
+                    viewing_pos = 0
+                break
+            elif key == ord('e'):
+                if len(enhanced_image_list[viewing_pos].bead_list) > 0:
+                    enhanced_image_list[viewing_pos].bead_list.pop()
+                break
+            elif key == ord('s'):
+                enhanced_image_list[viewing_pos].bead_list.append(Bead(x1, y1, scale=scale))
+                break
+            elif key == ord('q'):
+                viewing_flag = False
+                break
+    cv2.destroyAllWindows()
+    centre_point = (int(enhanced_image_list[0].image.shape[1] * 0.5), int(enhanced_image_list[0].image.shape[0] * 0.5))
+    for enhanced_img in enhanced_image_list:
+        for bead in enhanced_img.bead_list:
+            pixel_value = enhanced_img.image[bead.y, bead.x]
+            triple = pixel2mm((bead.x, bead.y), centre_point)
+            triple.append(enhanced_img.z_key)
+            data_dict["Animal ID"].append(enhanced_img.animal_id)
+            data_dict["Mean"].append(pixel_value)
+            data_dict["X"].append(triple[0])
+            data_dict["Y"].append(triple[1])
+            data_dict["Z"].append(triple[2])
+            data_dict["Bead Area"].append(0)
+            data_dict["Bead Circularity"].append(0)
+
+    df = pd.DataFrame.from_dict(data_dict)
+    df.to_csv(os.path.join(output_csv_folder, 'manual_segmentation.csv'), index=False)
+
+def segment_bead_csv(root_dir, auto=True):
+
+    img_root_dir = os.path.join(root_dir, "processed")
     img_path_list = []
-    out_put_folder = os.path.join(root_dir, "5 - Data")
+    out_put_folder = os.path.join(root_dir, "data")
     for img_dir in os.listdir(img_root_dir):
         if img_dir.endswith(".tif"):
             img_path_list.append(os.path.join(img_root_dir, img_dir))
-    locate_beads(img_path_list, out_put_folder)
+    if auto:
+        print("Computing segmentation using Fourier transform...")
+        if not os.path.exists(os.path.join(out_put_folder, 'auto_segmentation.csv')):
+            locate_beads(img_path_list, out_put_folder)
+    else:
+        if not os.path.exists(os.path.join(out_put_folder, 'manual_segmentation.csv')):
+            locate_beads_manual(img_path_list, out_put_folder)
 
 def is_in_center(centerPonit, real_img):
     '''
@@ -545,9 +740,10 @@ def main(root_dir, save_dir, prepare_atlas_tissue=False, registration=False,
         img_dir = os.path.join(root_dir, name, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
         save_directory = os.path.join(save_dir, name)
         check_create_dirs(save_directory)
-        if auto_seg:
-            segment_bead_csv(os.path.join(root_dir, name))
+
+        segment_bead_csv(os.path.join(root_dir, name), auto=auto_seg)
         save_bead_mask(save_directory, os.path.join(root_dir, name), show_circle=show, auto=auto_seg)
+
         if prepare_atlas_tissue:
             prepare_atlas()
             save_pair_images(img_dir, save_dir=save_directory)
@@ -671,6 +867,96 @@ def draw_tree_graph(csv_dict, save_directory, query_dict):
         for pre, _, node in RenderTree(root_node):
             f.write('%s:%s, beads number:%2d, beads percentage: %.5f %% \n' % (pre, node.name, node.count, node.percentage*100.))
 
+# def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=False,
+#          Ants_script="/home/silasi/ANTs/Scripts",
+#          app_tran=False, write_summary=False, show=False,
+#          show_atlas=False, intro=True, auto_seg=True):
+#     """
+#     Show function is not compatible with writing csv funtion. Do one thing at a time.
+#     :param brain_dir: Directory for handling the brain you would like to analyse.
+#     :param save_dir: Directory to save the analysed result.
+#     :param prepare_atlas_tissue: True for the first time to run on this animal. Set fault to save time after that.
+#     :param registration: Default True, use ANTs to align brain. Set as fause in the second time to save time.
+#     :param app_tran: Always true.
+#     :param write_summary: True for generating summary csv and tree graph.
+#     :param show: True for show in opencv frame, cannot be true when write summary.
+#     :return:
+#     """
+#     brain_name = os.path.basename(brain_dir)
+#     assert not (show and write_summary), "Show function is not compatible with sumarry function"
+#
+#     img_dir = os.path.join(brain_dir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
+#     save_directory = os.path.join(save_dir, brain_name)
+#     check_create_dirs(save_directory)
+#     if auto_seg:
+#         segment_bead_csv(os.path.join(brain_dir))
+#     save_bead_mask(save_directory, os.path.join(brain_dir), show_circle=show, auto=auto_seg)
+#     if prepare_atlas_tissue:
+#         prepare_atlas()
+#         save_pair_images(img_dir, save_dir=save_directory)
+#
+#     result_dict = None
+#     length = len(os.listdir(os.path.join(save_directory, 'atlas')))
+#     for i in tqdm(range(length)):
+#         atlas_dir = os.path.join(save_directory, 'atlas' + os.sep + '%d.tif' % i)
+#         tissue_dir = os.path.join(save_directory, 'tissue' + os.sep + '%d.tif' % i)
+#
+#         output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
+#
+#         if registration:
+#             quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
+#
+#         transforms = [os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '0GenericAffine.mat'),
+#                       os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '1Warp.nii.gz')]
+#         bead_dir = os.path.join(save_directory, 'bead' + os.sep + '%d.tif' % i)
+#
+#         if app_tran:
+#             apply_transform(bead_dir, atlas_dir, transforms, os.path.join(save_directory, "post_bead" + os.sep + "%d.nii" % i))
+#             apply_transform(tissue_dir, atlas_dir, transforms, os.path.join(save_directory, "post_tissue" + os.sep + "%d.nii"%i))
+#
+#         if write_summary and not show:
+#             bead = load_img(os.path.join(save_directory, "post_bead", "%d.nii"%i), 'nii')
+#             ann = np.load(os.path.join(save_directory, "ann", "%d.npy" % i))
+#             result_dict = summary_single_section(result_dict, bead, ann)
+#
+#     if write_summary and not show:
+#         query_dict = get_query_dict()
+#         csv_dict = {"label": [], "text_label": [], "number": [],
+#                     "structure_id_path": [], "percentage": []}
+#
+#         total_bead_number = 0.
+#         not_found = 0
+#
+#         for key in result_dict:
+#             total_bead_number += result_dict[key]
+#
+#         for key in result_dict:
+#             if key in query_dict.keys():
+#                 csv_dict["label"].append(key)
+#                 csv_dict["text_label"].append(query_dict[key]['name'])
+#                 csv_dict["structure_id_path"].append(query_dict[key]['structure_id_path'])
+#                 csv_dict["number"].append(result_dict[key])
+#                 csv_dict["percentage"].append(float(result_dict[key]) / total_bead_number)
+#             else:
+#                 not_found += result_dict[key]
+#                 print("ID:" + str(key) + " Not found, containing bead: %d" % result_dict[key])
+#
+#         draw_tree_graph(csv_dict, save_directory, query_dict)
+#
+#         csv_dict["label"].append("nan")
+#         csv_dict["text_label"].append("Background")
+#         csv_dict["structure_id_path"].append("nan")
+#         csv_dict["number"].append(not_found)
+#         csv_dict["percentage"].append(float(not_found) / total_bead_number)
+#         df = pd.DataFrame(csv_dict)
+#         df.to_csv(os.path.join(save_directory, "summary.csv"))
+#
+#     if show:
+#         if not show_atlas:
+#             merge_layers(brain_name, save_dir, 'nii', 'nii', 'npy', intro)
+#         else:
+#             merge_layers(brain_name, save_dir, 'nii', 'nii', 'tif', intro)
+
 def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=False,
          Ants_script="/home/silasi/ANTs/Scripts",
          app_tran=False, write_summary=False, show=False,
@@ -688,12 +974,22 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
     """
     brain_name = os.path.basename(brain_dir)
     assert not (show and write_summary), "Show function is not compatible with sumarry function"
+    raw_img_dir = os.path.join(brain_dir, 'raw')
+    assert os.path.exists(raw_img_dir)
+    img_dir = os.path.join(brain_dir, 'processed')
+    if not os.path.exists(img_dir):
+        os.mkdir(img_dir)
+    data_dir = os.path.join(brain_dir, 'data')
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+    if len(os.listdir(img_dir)) == 0:
+        prepare_tissue_image(raw_img_dir, img_dir)
 
-    img_dir = os.path.join(brain_dir, "3 - Processed Images", "7 - Counted Reoriented Stacks Renamed")
     save_directory = os.path.join(save_dir, brain_name)
     check_create_dirs(save_directory)
-    if auto_seg:
-        segment_bead_csv(os.path.join(brain_dir))
+
+    segment_bead_csv(brain_dir, auto=auto_seg)
+
     save_bead_mask(save_directory, os.path.join(brain_dir), show_circle=show, auto=auto_seg)
     if prepare_atlas_tissue:
         prepare_atlas()
@@ -704,7 +1000,6 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
     for i in tqdm(range(length)):
         atlas_dir = os.path.join(save_directory, 'atlas' + os.sep + '%d.tif' % i)
         tissue_dir = os.path.join(save_directory, 'tissue' + os.sep + '%d.tif' % i)
-
         output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
 
         if registration:
@@ -744,8 +1039,8 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
             else:
                 not_found += result_dict[key]
                 print("ID:" + str(key) + " Not found, containing bead: %d" % result_dict[key])
-
-        draw_tree_graph(csv_dict, save_directory, query_dict)
+        if len(result_dict.keys()) > 0:
+            draw_tree_graph(csv_dict, save_directory, query_dict)
 
         csv_dict["label"].append("nan")
         csv_dict["text_label"].append("Background")
@@ -760,7 +1055,6 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
             merge_layers(brain_name, save_dir, 'nii', 'nii', 'npy', intro)
         else:
             merge_layers(brain_name, save_dir, 'nii', 'nii', 'tif', intro)
-
 if __name__ == '__main__':
     pass
 

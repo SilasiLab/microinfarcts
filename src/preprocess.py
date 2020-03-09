@@ -121,9 +121,9 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b"):
 
     def sort_key(item):
         item = os.path.basename(item)
-        hour = int(item.split('.')[0].split('_')[1])
-        min = int(item.split('.')[0].split('_')[2])
-        sec = int(item.split('.')[0].split('_')[3])
+        hour = int(item.split('.')[0].split(':')[0].split('_')[1])
+        min = int(item.split('.')[0].split(':')[1])
+        sec = int(item.split('.')[0].split(':')[2].split('_')[0])
         return ((hour * 100) + min) * 100 + sec
     img_paths.sort(key=sort_key)
 
@@ -189,13 +189,13 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b"):
                 color_dict[key] = (85, 85, 85)
             color_dict[status_dict[pos]] = (0, 255, 0)
 
-            cv2.putText(canvas, "1. Draw %s, press s to save" % manual_dict[status.point1], (50, 80),
+            cv2.putText(canvas, "1. Draw %s, press p to save" % manual_dict[status.point1], (50, 80),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.point1], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "2. Draw %s, press s to save" % manual_dict[status.point2], (50, 110),
+            cv2.putText(canvas, "2. Draw %s, press p to save" % manual_dict[status.point2], (50, 110),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.point2], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "3. Draw %s, press s to save" % manual_dict[status.vertical_line], (50, 140),
+            cv2.putText(canvas, "3. Draw %s, press p to save" % manual_dict[status.vertical_line], (50, 140),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.vertical_line], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "4. Draw %s, press s to save" % manual_dict[status.critical_line], (50, 170),
+            cv2.putText(canvas, "4. Draw %s, press p to save" % manual_dict[status.critical_line], (50, 170),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
             cv2.putText(canvas, "5. Press Q to save all and start to calibrate", (50, 200),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
@@ -214,7 +214,7 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b"):
                 if pos == len(raw_images):
                     pos = 0
                 break
-            elif key & 0xFF == ord('s'):
+            elif key & 0xFF == ord('p'):
                 if not affine_dict[pos].isInstance():
                     if not affine_dict[pos].ponit1.isInstance:
                         affine_dict[pos].ponit1.x = x1

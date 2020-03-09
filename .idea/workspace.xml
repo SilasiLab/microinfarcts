@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e10a9f20-1ea2-4fb3-a425-655bf40280bf" name="Default Changelist" comment="" />
+    <list default="true" id="e10a9f20-1ea2-4fb3-a425-655bf40280bf" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image_processing_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/image_processing_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/preprocess.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -193,22 +197,22 @@
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
     <state x="780" y="297" key="FileChooserDialogImpl/65.24.1855.1056@65.24.1855.1056" timestamp="1583164056846" />
-    <state width="1550" height="344" key="GridCell.Tab.0.bottom" timestamp="1583521462281">
+    <state width="1550" height="258" key="GridCell.Tab.0.bottom" timestamp="1583780008673">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="344" key="GridCell.Tab.0.bottom/65.24.1855.1056@65.24.1855.1056" timestamp="1583521462281" />
-    <state width="1550" height="344" key="GridCell.Tab.0.center" timestamp="1583521462280">
+    <state width="1550" height="258" key="GridCell.Tab.0.bottom/65.24.1855.1056@65.24.1855.1056" timestamp="1583780008673" />
+    <state width="1550" height="258" key="GridCell.Tab.0.center" timestamp="1583780008672">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="344" key="GridCell.Tab.0.center/65.24.1855.1056@65.24.1855.1056" timestamp="1583521462280" />
-    <state width="1550" height="344" key="GridCell.Tab.0.left" timestamp="1583521462280">
+    <state width="1550" height="258" key="GridCell.Tab.0.center/65.24.1855.1056@65.24.1855.1056" timestamp="1583780008672" />
+    <state width="1550" height="258" key="GridCell.Tab.0.left" timestamp="1583780008672">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="344" key="GridCell.Tab.0.left/65.24.1855.1056@65.24.1855.1056" timestamp="1583521462280" />
-    <state width="1550" height="344" key="GridCell.Tab.0.right" timestamp="1583521462280">
+    <state width="1550" height="258" key="GridCell.Tab.0.left/65.24.1855.1056@65.24.1855.1056" timestamp="1583780008672" />
+    <state width="1550" height="258" key="GridCell.Tab.0.right" timestamp="1583780008672">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="344" key="GridCell.Tab.0.right/65.24.1855.1056@65.24.1855.1056" timestamp="1583521462280" />
+    <state width="1550" height="258" key="GridCell.Tab.0.right/65.24.1855.1056@65.24.1855.1056" timestamp="1583780008672" />
     <state x="330" y="262" key="SettingsEditor" timestamp="1580936097551">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
@@ -270,6 +274,11 @@
           <url>file://$PROJECT_DIR$/src/preprocess.py</url>
           <line>311</line>
           <option name="timeStamp" value="144" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/preprocess.py</url>
+          <line>125</line>
+          <option name="timeStamp" value="146" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

@@ -1002,7 +1002,7 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
         tissue_dir = os.path.join(save_directory, 'tissue' + os.sep + '%d.tif' % i)
         output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
 
-        if registration:
+        if registration and len(os.listdir(os.path.join(save_directory, 'output'))) == 0:
             quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
 
         transforms = [os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '0GenericAffine.mat'),

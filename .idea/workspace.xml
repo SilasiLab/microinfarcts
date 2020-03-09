@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e10a9f20-1ea2-4fb3-a425-655bf40280bf" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/microinfarcts.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/microinfarcts.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ants_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ants_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/bead_finder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bead_finder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/bead_location.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bead_location.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/image_processing_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/image_processing_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="e10a9f20-1ea2-4fb3-a425-655bf40280bf" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

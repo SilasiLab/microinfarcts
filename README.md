@@ -30,15 +30,15 @@
  * 12. `git clone https://github.com/SilasiLab/microinfarcts.git`
 
 ## 2. Preparatory phase
-  * Microinfarcts is based on the result given by imageJ process. The input data should be the result of imageJ process.
-  * For the input raw data, the whole directory structure should be:
-  * 1. `root directory/[brain id](individual brain)/3 - Processed Images/7 - Counted Reoriented Stacks Renamed/*imgs`
-  * 2. `root directory/[brain id](individual brain)/5 - Data/[brain id] - Manual Bead Location Data v0.1.4 - Dilation Factor 0.csv`
-  * Note: The first directory should contain the brain images aligned by imageJ. And under the second one there should be a csv containing the human labeled micro infarcts loaction.
+  * 1. For the input raw data, the input folder directory structure should be:
+  * `[Your folder holding all brains]/[brain id](individual brain)/raw/[images_b.jpg]`
+  * Images should all have a postfix `b` (`imageid_b`, e.g.) which indicates color channel blue.
+  * 2. You will need a folder to save the result as also. Feel free to create your own folders.
   * After downloading as well as compiling ANTs, you should find the dirctory of `antsRegistrationSyNQuick.sh` under ANTs `Scripts` folder. Take this PC as an example, it is `/home/silasi/ANTs/Scripts/antsRegistrationSyNQuick.sh`. Then the folder containing `antsRegistrationSyNQuick.sh`, that is `/home/silasi/ANTs/Scripts/` which will be used as the parameter `--ant` of the whole project. Here we leave it as [Script folder] for short and for future use.
+  
 ## 3. Simple GUI
   * 1. `cd [your directory]/microinfarcts/src`
-  * 2. `python gui.py`
+  * 2. `python main.py`
   * 3. 
        ![Gui](/pics/microinfarctsGUI.png)
   * 4. Check `Auto Segmentation` will perform a Discrete Fourier Transform to find the microinfarcts(bright circle area) in brain scans.

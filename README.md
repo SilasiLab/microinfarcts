@@ -39,7 +39,6 @@
   * 2. `python main.py`
   * 3. 
        ![Gui](/pics/microinfarctsGUI.png)
-  * 4. Check `Auto Segmentation` will perform a Discrete Fourier Transform to find the microinfarcts(bright circle area) in brain scans. You can also manually segement the bead by selecting `Manual beads labeling`.
-  * Note: By running any method in the two, a csv file will be cached on the local disk. Once the file is cached, the programme will skip the step of segmentation.  
-  * 6. Check `Show the result`, the script will transform the bead location mask and project it on the brain scan. If you select this option, then no summary files will be generated.
-  * 7. Check `Write a summary`, a summary csv, a structual tree txt, a structual tree image will be generated under `[result folder]/[brain id]/`.
+  * 4. Check `Auto Segmentation` will perform a Discrete Fourier Transform to find the microinfarcts(bright circle area) in brain scans. You can also manually segement the bead by selecting `Manual beads labeling`. Note: By running any one in the two methods, a csv file will be cached on the local disk. Once the file is cached, the programme will skip the step of segmentation.  
+  * 6. Check `Show the result`, the script will transform the bead location mask and project it on the brain scan. Showing the result and generating the summary files have some conflicts, so they cannot be run at the same time.
+  * 7. Check `Write a summary`, a summary csv, a structual tree txt, as well as a structual tree image will be generated under `[result folder]/[brain id]/`.

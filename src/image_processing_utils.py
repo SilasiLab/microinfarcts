@@ -997,12 +997,15 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=False, registration=
 
     result_dict = None
     length = len(os.listdir(os.path.join(save_directory, 'atlas')))
+    registration_flag = True
+    if len(os.listdir(os.path.join(save_directory, 'output'))) > 0:
+        registration_flag = False
     for i in tqdm(range(length)):
         atlas_dir = os.path.join(save_directory, 'atlas' + os.sep + '%d.tif' % i)
         tissue_dir = os.path.join(save_directory, 'tissue' + os.sep + '%d.tif' % i)
         output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
 
-        if registration and len(os.listdir(os.path.join(save_directory, 'output'))) == 0:
+        if registration and registration_flag:
             quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
 
         transforms = [os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '0GenericAffine.mat'),

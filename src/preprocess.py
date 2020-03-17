@@ -107,7 +107,7 @@ def click_and_draw_line(event, x, y, flags, param):
         drawing = False
 
 
-def prepare_tissue_image(input_folder, output_folder, color_channel="b"):
+def prepare_tissue_image(input_folder, output_folder, color_channel="b", section_thickness=100):
     '''
     This is the first step to get image aligned and also get the origin point.
     :param input_folder: The folder contains a brain.
@@ -337,10 +337,10 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b"):
         rotated_img = cv2.warpAffine(shifted_img, rotation_matrix, (cols, rows))
         processed_img[img_index] = rotated_img
 
-
+    section_thickness = float(section_thickness) / 1000.
     for i in range(stack_length):
-        z_index = float(i - original_index) * 0.05
+        z_index = float(i - original_index) * section_thickness
         img_name = os.path.basename(input_folder)
-        img_name = img_name + ", x0.005464, y0.005464, z0.05, umm, 009, %f.tif" % z_index
+        img_name = img_name + ", x0.005464, y0.005464, z%.2f, umm, 009, %f.tif" % (section_thickness, z_index)
         img_dir = os.path.join(output_folder, img_name)
         cv2.imwrite(img_dir, processed_img[i])

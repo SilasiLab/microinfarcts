@@ -2,8 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e10a9f20-1ea2-4fb3-a425-655bf40280bf" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/microinfarcts.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/microinfarcts.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bead_finder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bead_finder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bead_location.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bead_location.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/image_processing_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/image_processing_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/preprocess.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,27 +66,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="bead_location" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="microinfarcts" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/bead_location.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="gui" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microinfarcts" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -93,6 +79,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/gui.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="image_processing_utils" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microinfarcts" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/image_processing_utils.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -146,10 +153,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.image_processing_utils" />
         <item itemvalue="Python.gui" />
         <item itemvalue="Python.preprocess" />
         <item itemvalue="Python.DEBUG" />
-        <item itemvalue="Python.bead_location" />
       </list>
     </recent_temporary>
   </component>
@@ -192,34 +199,38 @@
     </option>
   </component>
   <component name="WindowStateProjectService">
-    <state x="780" y="297" key="FileChooserDialogImpl" timestamp="1583164056846">
+    <state x="780" y="297" key="FileChooserDialogImpl" timestamp="1583941183580">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state x="780" y="297" key="FileChooserDialogImpl/65.24.1855.1056@65.24.1855.1056" timestamp="1583164056846" />
-    <state width="1550" height="219" key="GridCell.Tab.0.bottom" timestamp="1583853488660">
+    <state x="780" y="297" key="FileChooserDialogImpl/65.24.1855.1056@65.24.1855.1056" timestamp="1583941183580" />
+    <state width="1832" height="292" key="GridCell.Tab.0.bottom" timestamp="1584476021294">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="219" key="GridCell.Tab.0.bottom/65.24.1855.1056@65.24.1855.1056" timestamp="1583853488660" />
-    <state width="1550" height="219" key="GridCell.Tab.0.center" timestamp="1583853488659">
+    <state width="1832" height="292" key="GridCell.Tab.0.bottom/65.24.1855.1056@65.24.1855.1056" timestamp="1584476021294" />
+    <state width="1832" height="292" key="GridCell.Tab.0.center" timestamp="1584476021294">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="219" key="GridCell.Tab.0.center/65.24.1855.1056@65.24.1855.1056" timestamp="1583853488659" />
-    <state width="1550" height="219" key="GridCell.Tab.0.left" timestamp="1583853488659">
+    <state width="1832" height="292" key="GridCell.Tab.0.center/65.24.1855.1056@65.24.1855.1056" timestamp="1584476021294" />
+    <state width="1832" height="292" key="GridCell.Tab.0.left" timestamp="1584476021293">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="219" key="GridCell.Tab.0.left/65.24.1855.1056@65.24.1855.1056" timestamp="1583853488659" />
-    <state width="1550" height="219" key="GridCell.Tab.0.right" timestamp="1583853488660">
+    <state width="1832" height="292" key="GridCell.Tab.0.left/65.24.1855.1056@65.24.1855.1056" timestamp="1584476021293" />
+    <state width="1832" height="292" key="GridCell.Tab.0.right" timestamp="1584476021294">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state width="1550" height="219" key="GridCell.Tab.0.right/65.24.1855.1056@65.24.1855.1056" timestamp="1583853488660" />
+    <state width="1832" height="292" key="GridCell.Tab.0.right/65.24.1855.1056@65.24.1855.1056" timestamp="1584476021294" />
     <state x="330" y="262" key="SettingsEditor" timestamp="1580936097551">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
     <state x="330" y="262" key="SettingsEditor/65.24.1855.1056@65.24.1855.1056" timestamp="1580936097551" />
-    <state x="983" y="581" key="com.intellij.ide.util.TipDialog" timestamp="1582661621348">
+    <state x="983" y="581" key="com.intellij.ide.util.TipDialog" timestamp="1584464855125">
       <screen x="65" y="24" width="1855" height="1056" />
     </state>
-    <state x="983" y="581" key="com.intellij.ide.util.TipDialog/65.24.1855.1056@65.24.1855.1056" timestamp="1582661621348" />
+    <state x="983" y="581" key="com.intellij.ide.util.TipDialog/65.24.1855.1056@65.24.1855.1056" timestamp="1584464855125" />
+    <state x="523" y="227" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1584470957947">
+      <screen x="65" y="24" width="1855" height="1056" />
+    </state>
+    <state x="523" y="227" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/65.24.1855.1056@65.24.1855.1056" timestamp="1584470957947" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -235,33 +246,28 @@
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
-          <line>752</line>
-          <option name="timeStamp" value="35" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/bead_location.py</url>
           <line>42</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
-          <line>856</line>
+          <line>794</line>
           <option name="timeStamp" value="134" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
-          <line>1045</line>
+          <line>893</line>
           <option name="timeStamp" value="135" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
-          <line>829</line>
+          <line>767</line>
           <option name="timeStamp" value="136" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
-          <line>349</line>
+          <line>351</line>
           <option name="timeStamp" value="139" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -278,6 +284,16 @@
           <url>file://$PROJECT_DIR$/src/preprocess.py</url>
           <line>125</line>
           <option name="timeStamp" value="146" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/bead_location.py</url>
+          <line>147</line>
+          <option name="timeStamp" value="170" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/image_processing_utils.py</url>
+          <line>680</line>
+          <option name="timeStamp" value="189" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

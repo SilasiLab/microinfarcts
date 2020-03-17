@@ -60,7 +60,7 @@ class Bead:
         self.disconnected_number = 0
         self.closed = False
 
-def find_real_bead(data_frame, deliation_factor=3, pixel2mm = 0.005464, tolerance=0.5, ignore_disconnected=3):
+def find_real_bead(data_frame, deliation_factor=10, pixel2mm = 0.005464, tolerance=0.5, ignore_disconnected=3):
     '''
     The fuction used to finding the real location of the bead insied the sequnce of points.
     :param data_frame: csv data frame
@@ -79,8 +79,9 @@ def find_real_bead(data_frame, deliation_factor=3, pixel2mm = 0.005464, toleranc
 
     def manhattan_key(elem):
         return elem[0] + elem[1]
+
     def distance_key(elem):
-        return -elem[4]
+        return elem[4]
 
     for item in data_frame:
         if item[2] != current_z_pos:
@@ -90,6 +91,7 @@ def find_real_bead(data_frame, deliation_factor=3, pixel2mm = 0.005464, toleranc
         if item[2] == current_z_pos:
             layer.append(item)
     layers.append(layer)
+
     for i in range(len(layers)):
         layer = layers[i]
         layer.sort(key=manhattan_key)
@@ -112,15 +114,20 @@ def find_real_bead(data_frame, deliation_factor=3, pixel2mm = 0.005464, toleranc
                                 layer[i][4] = distance
                         else:
                             if len(layer[i]) < 5:
-                                layer[i].append(-1000)
+                                layer[i].append(1000)
                             else:
-                                layer[i][4] = -1000
+                                layer[i][4] = 1000
+
                     layer.sort(key=distance_key)
+
+                    print(layer)
+
                     if len(layer) == 0:
                         bead.disconnected_number += 1
                         if bead.disconnected_number >= ignore_disconnected:
                             bead.closed = True
-                    elif layer[0][4] != -1000 and float(layer[0][3]) * tolerance < float(bead.brightness):
+
+                    elif layer[0][4] != 1000:
                         bead.pos.append((layer[0][0], layer[0][1]))
                         bead.end_z = layer[0][2]
                         bead.brightness = layer[0][3]
@@ -293,10 +300,6 @@ def get_pixel_points_layer_dict(rootDir, auto=False):
 
     csv_dir_root = os.path.join(rootDir, "data")
     if not auto:
-        # for item in os.listdir(csv_dir_root):
-        #     if 'Location' in item:
-        #         csv_dir = os.path.join(csv_dir_root, item)
-        #         break
         assert os.path.exists(os.path.join(csv_dir_root, "manual_segmentation.csv"))
         csv_dir = os.path.join(csv_dir_root, "manual_segmentation.csv")
     else:
@@ -305,7 +308,8 @@ def get_pixel_points_layer_dict(rootDir, auto=False):
 
     data_frame = load_data(csv_dir)
 
-    bead_list = find_real_bead(data_frame, deliation_factor=3, ignore_disconnected=1, tolerance=0.3)
+    bead_list = find_real_bead(data_frame, deliation_factor=5, ignore_disconnected=2, tolerance=0.001)
+
     img_dir = os.path.join(rootDir, "processed")
     origin = calculate_origin(img_dir)
     def depth_key(elem):
@@ -364,7 +368,8 @@ def layer_dict_2_mask(rootDir, layer_dict, show=False, save_dir=None, show_circl
     for tif in tif_list:
         temp_canvas = canvas.copy()
         if show:
-            show_canvas = temp_canvas.copy()
+            # show_canvas = temp_canvas.copy()
+            show_canvas = cv2.imread(os.path.join(img_dir, tif))
         if z_key(tif) in layer_dict.keys():
             layer = layer_dict[z_key(tif)]
             for point in layer:
@@ -384,12 +389,13 @@ def layer_dict_2_mask(rootDir, layer_dict, show=False, save_dir=None, show_circl
         index = 0
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
-        for i in range(len(save_img_list)-1, -1, -1):
+        for i in range(0, len(save_img_list)):
             imsave(os.path.join(save_dir, str(index)+".tif"), save_img_list[i])
             index += 1
 
 def save_bead_mask(saveDir, rootDir = "/home/silasi/brain_imgs/66148-2", show_circle=False, auto=False):
     layer_dict = get_pixel_points_layer_dict(rootDir, auto=auto)
+    # plot_layer_dict_on_img(rootDir, layer_dict)
     layer_dict_2_mask(rootDir, layer_dict, False, save_dir=saveDir, show_circle=show_circle)
 
 

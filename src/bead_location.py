@@ -144,7 +144,7 @@ def locate_beads(img_path_list, output_csv_folder):
         z = key(img_path)
         img = read_img(img_path)
         img = remove_background(img)
-        xy_list = fft(img, 30, 30)
+        xy_list = fft(img, 30, 30, show=False)
         for tu in xy_list:
             centre_point = (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5))
             pixel_value = img[tu[1], tu[0]]

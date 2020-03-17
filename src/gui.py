@@ -1,7 +1,8 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QLabel,
                              QGridLayout, QHBoxLayout, QComboBox, QCalendarWidget, QListWidget,
-                             QSlider, QMessageBox, QRadioButton, QButtonGroup, QDialog, QFileDialog)
+                             QSlider, QMessageBox, QRadioButton, QButtonGroup, QDialog, QFileDialog,
+                             QLineEdit)
 from PyQt5.QtCore import *
 import threading
 import traceback, sys
@@ -59,6 +60,15 @@ class StartWindow(QMainWindow):
         self.btnRun = QPushButton("Analyse (Will not response for a while)")
         self.btnRun.clicked.connect(self.analyse)
 
+        self.thickness_label = QLabel(self)
+        self.thickness_label.setText('                                                                      Thickness:')
+        # self.thickness_line = QLineEdit(self)
+        self.thickness_combo = QComboBox(self)
+        self.thickness_combo.addItem("25")
+        self.thickness_combo.addItem("50")
+        self.thickness_combo.addItem("100")
+
+
         self.layout_main.addWidget(self.labelRootDir, 0, 0)
         self.layout_main.addWidget(self.lineRootDir, 1, 0)
         self.layout_main.addWidget(self.btnRootDir, 1, 1)
@@ -81,7 +91,10 @@ class StartWindow(QMainWindow):
         self.layout_main.addWidget(self.btnAdd, 8, 1)
         self.layout_main.addWidget(self.analyseList, 8, 2)
 
-        self.layout_main.addWidget(self.btnRun, 9, 0)
+        self.layout_main.addWidget(self.thickness_label, 9, 0)
+
+        self.layout_main.addWidget(self.thickness_combo, 9, 1)
+        self.layout_main.addWidget(self.btnRun, 9, 2)
 
         self.setCentralWidget(self.widget_main)
         self.update_list()
@@ -121,9 +134,11 @@ class StartWindow(QMainWindow):
             self.lineScriptDir.setText(self.script_dir)
 
     def analyse(self):
+        self.thickness = int(str(self.thickness_combo.currentText()))
         for brain_dir in [str(self.analyseList.item(i).text()) for i in range(self.analyseList.count())]:
             run_one_brain(brain_dir, self.save_dir, True, True, self.script_dir, True, self.radio_write.isChecked(),
-                          self.radio_show.isChecked(), False, False, self.radio_auto.isChecked())
+                          self.radio_show.isChecked(), False, False, self.radio_auto.isChecked(),
+                          section_thickness=self.thickness)
 
 
 

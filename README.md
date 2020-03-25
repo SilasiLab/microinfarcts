@@ -45,3 +45,10 @@ After going through the whole process, you will be able to get
   * 7. Select the brain folder you would like to analyse from the left list, then move it to the analysing list on the right side by clicking the button `>>`.
   * 8. Click on the analyse button.
   * 9. A manual alignment is required at the begining. You need firstly click the common point shared by the two neigbour images. Go the last section containing the anterior commissure, draw the line from top to bottom in the right middle of the brain. Save it, then draw the line across the anterior commissure. Press Q to save all and continue the processing step.
+
+## Note:
+* For each step, the middle result is preserved in the local files and will be resued. So whenever you want to redo the manual work, you need to delete the relative files first.
+* 1. The manual allign result is under `[Input folder]/[brain id]/[processed]`
+* 2. The human labeled microinfarcts result is under `[Input folder]/[brain id]/[data]/manual_segmentation.csv`
+* 3. The automatic labeled microinfarcts result is under `[Input folder]/[brain id]/[data]/auto_segmentation.csv`
+* 4. Final result folder under `[result folder]/[brain id]` needs to be delected too.

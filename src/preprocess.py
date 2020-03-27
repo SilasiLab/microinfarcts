@@ -128,7 +128,7 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
     img_paths.sort(key=sort_key)
 
     # raw_images = [cv2.imread(item) for item in img_paths]
-        top, bottom, left, right = 400, 100, 100, 100
+    top, bottom, left, right = 400, 100, 100, 100
     raw_images = [cv2.copyMakeBorder(cv2.imread(item), top, bottom, left, right, cv2.BORDER_CONSTANT, None, (0, 0, 0)) for item in img_paths] 
     stack_length = len(raw_images)
     pos = 0
@@ -148,6 +148,7 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
                     status.vertical_line: (125, 125, 0),
                     status.critical_line: (0, 125, 125)
                   }
+    save_line_lock = np.zeros((len(raw_images),))
     while(True):
         if pos not in affine_dict.keys():
             affine_dict[pos] = Affine()
@@ -201,7 +202,10 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
             cv2.putText(canvas, "5. Press Q to save all and start to calibrate", (50, 200),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "Others: Press A and D to go previous or next", (50, 230),
+            cv2.putText(canvas, "6. Press E to erase current point", (50, 230),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
+
+            cv2.putText(canvas, "Others: Press A and D to go previous or next", (50, 260),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
             cv2.imshow("Window", canvas)
 
@@ -216,7 +220,21 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
                 if pos == len(raw_images):
                     pos = 0
                 break
+            
+            elif key & 0xFF == ord('e'):
+                if affine_dict[pos].ponit2.isInstance:
+                    affine_dict[pos].ponit2.x = 0
+                    affine_dict[pos].ponit2.y = 0
+                    status_dict[pos] = status.point2
+                    save_line_lock[pos] = 0
+                elif affine_dict[pos].ponit1.isInstance and pos > 0:
+                    affine_dict[pos].ponit1.x = 0
+                    affine_dict[pos].ponit1.y = 0
+                    status_dict[pos] = status.point1
+                    save_line_lock[pos] = 0
+                
             elif key & 0xFF == ord('p'):
+                print(save_line_lock.sum())
                 if not affine_dict[pos].isInstance():
                     if not affine_dict[pos].ponit1.isInstance:
                         affine_dict[pos].ponit1.x = x1
@@ -226,29 +244,33 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
                             affine_dict[pos].ponit2.x = 1
                             affine_dict[pos].ponit2.y = 1
                             status_dict[pos] = status.vertical_line
+                            save_line_lock[pos] = 1
                             if vertical_line.isInstance():
                                 status_dict[pos] = status.critical_line
 
                     elif not affine_dict[pos].ponit2.isInstance:
                         affine_dict[pos].ponit2.x = x1
                         affine_dict[pos].ponit2.y = y1
-                        status_dict[pos] = status.vertical_line
-                        if vertical_line.isInstance():
-                            status_dict[pos] = status.critical_line
+                        save_line_lock[pos] = 1
+                        if save_line_lock.sum() == len(raw_images):
+                            status_dict[pos] = status.vertical_line
+                            if vertical_line.isInstance():
+                                status_dict[pos] = status.critical_line
 
-                elif not vertical_line.isInstance():
-                    vertical_line.point1.x = x1
-                    vertical_line.point1.y = y1
-                    vertical_line.point2.x = x2
-                    vertical_line.point2.y = y2
-                    vertical_line.pos = pos
-                    status_dict[pos] = status.critical_line
-                elif not critical_line.isInstance():
-                    critical_line.point1.x = x1
-                    critical_line.point1.y = y1
-                    critical_line.point2.x = x2
-                    critical_line.point2.y = y2
-                    critical_line.pos = pos
+                elif save_line_lock.sum() == len(raw_images):
+                    if not vertical_line.isInstance():
+                        vertical_line.point1.x = x1
+                        vertical_line.point1.y = y1
+                        vertical_line.point2.x = x2
+                        vertical_line.point2.y = y2
+                        vertical_line.pos = pos
+                        status_dict[pos] = status.critical_line
+                    elif not critical_line.isInstance():
+                        critical_line.point1.x = x1
+                        critical_line.point1.y = y1
+                        critical_line.point2.x = x2
+                        critical_line.point2.y = y2
+                        critical_line.pos = pos
 
                 break
             elif key & 0xFF == ord('q'):
@@ -315,17 +337,6 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
         temp_img = copy.deepcopy(raw_images[img_index])
         temp_img = cv2.cvtColor(temp_img, cv2.COLOR_BGR2GRAY)
 
-        # if img_index == original_index:
-        #     continue
-        #     # diff_x = ((cols - 1) / 4.0) - (float(critical_line.point1.x + critical_line.point2.x) / 2.)
-        #     # diff_y = ((rows - 1) / 4.0) - (float(critical_line.point1.y + critical_line.point2.y) / 2.)
-        #     # shift_matrix = np.float32([
-        #     #     [1, 0, 2. * diff_x],
-        #     #     [0, 1, 2. * diff_y]
-        #     # ])
-        #     # shifted_img = cv2.warpAffine(temp_img, shift_matrix, (cols, rows))
-        #
-        # else:
         diff_x = affine_dict[img_index - 1].ponit2.x - affine_dict[img_index].ponit1.x
         diff_y = affine_dict[img_index - 1].ponit2.y - affine_dict[img_index].ponit1.y
         affine_dict[img_index].ponit2.x += diff_x

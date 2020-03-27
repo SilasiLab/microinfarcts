@@ -5,7 +5,7 @@ After going through the whole process, you will be able to get
 * 2. A opencv window showing the standard atlas, symmerically normalized brain images and the location of the micro infarcts. 
 * ![opencv window](https://github.com/SilasiLab/microinfarcts/blob/master/pics/show.png)
 * You will be able to ajust the transparency using the buttons `q(-)` and `e(+)`, and also position the image using the buttons `a (previous imgae)` and `d (next image)`.
-* The reference atlas comes from Allen Atlas organization. You can find reference data on google drive link attached here:(https://drive.google.com/drive/folders/10MqL8BXkfRsjLgWRuoxJUuZzH9AuWIOe?usp=sharing)
+* The reference atlas comes from Allen Atlas organization. You can find reference data on google drive link attached here:(https://drive.google.com/a/uottawa.ca/file/d/1gWY_0LZDIYWut7o2haSa0zM-XRKGQxO_/view?usp=sharing)
 * After downloading the reference file, you need to copy it into `atlas_reference` folder.
 * So the whole structure of the project should be:
     * `microinfarcts/src`

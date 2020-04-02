@@ -30,7 +30,6 @@ After going through the whole process, you will be able to get
 ## 2. Preparatory phase
   * 1. For the input raw data, the input folder directory structure should be: `[Your folder containing all the brains]/[brain id](individual brain)/raw/[images_b.jpg]`. Images should all have a postfix `b` (`imageid_b`, e.g.) which indicates color channel blue.
   * 2. You will need a folder to save the result as also. Feel free to create your own folders.
-  * After downloading as well as compiling ANTs, you should find the dirctory of `antsRegistrationSyNQuick.sh` under ANTs `Scripts` folder. For an instance, it is `/home/username/ANTs/Scripts/antsRegistrationSyNQuick.sh`. As for the folder containing `antsRegistrationSyNQuick.sh`, that is `/home/username/ANTs/Scripts/` which will be used as the parameter `--ant` of the whole project. Here we leave it as [Script folder] for short and for future use.
   
 ## 3. User guide
   * 1. `cd [your directory]/microinfarcts/src`

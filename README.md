@@ -21,10 +21,10 @@ After going through the whole process, you will be able to get
  * 10. `conda install tk`
  * 11. `git clone https://github.com/SilasiLab/microinfarcts.git`
  * 12. Download the Allen Atlas file, unzip it and copy it into microinfarcts project.
-       The file structure for the project should be:
-       /path/to/microinfarcts/src
-       /path/to/microinfarcts/pics
-       /path/to/microinfarcts/pics/atlas_reference
+      * The file structure for the project should be:
+      * /path/to/microinfarcts/src
+      * /path/to/microinfarcts/pics
+      * /path/to/microinfarcts/pics/atlas_reference
        
 
 ## 2. Preparatory phase

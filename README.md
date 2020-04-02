@@ -7,14 +7,6 @@ After going through the whole process, you will be able to get
 * ![opencv window](https://github.com/SilasiLab/microinfarcts/blob/master/pics/show.png)
 * You will be able to ajust the transparency using the buttons `q(-)` and `e(+)`, and also position the image using the buttons `a (previous imgae)` and `d (next image)`.
 * The reference atlas comes from Allen Atlas organization. You can find reference data on google drive link attached here:(https://drive.google.com/a/uottawa.ca/file/d/1gWY_0LZDIYWut7o2haSa0zM-XRKGQxO_/view?usp=sharing)
-* After downloading the reference file, you need to copy it into `atlas_reference` folder.
-* So the whole structure of the project should be:
-    * `microinfarcts/src`
-    * `microinfarcts/atlas_reference`
-    * `microinfarcts/atlas_reference/annotation.mhd`
-    * `microinfarcts/atlas_reference/annotation.raw`
-    * `microinfarcts/atlas_reference/atlasVolume.mhd`
-    * `microinfarcts/atlas_reference/atlasVolume.raw`
 
 ## 1. Install dependencies
  * 1. `conda install pandas`
@@ -27,8 +19,13 @@ After going through the whole process, you will be able to get
  * 8. `pip install nipype`
  * 9. `conda install pyqt5`
  * 10. `conda install tk`
- * 11. Download and compile ANTs from (https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/)
- * 12. `git clone https://github.com/SilasiLab/microinfarcts.git`
+ * 11. `git clone https://github.com/SilasiLab/microinfarcts.git`
+ * 12. Download the Allen Atlas file, unzip it and copy it into microinfarcts project.
+       The file structure for the project should be:
+       /path/to/microinfarcts/src
+       /path/to/microinfarcts/pics
+       /path/to/microinfarcts/pics/atlas_reference
+       
 
 ## 2. Preparatory phase
   * 1. For the input raw data, the input folder directory structure should be: `[Your folder containing all the brains]/[brain id](individual brain)/raw/[images_b.jpg]`. Images should all have a postfix `b` (`imageid_b`, e.g.) which indicates color channel blue.

@@ -1,8 +1,9 @@
 # Microinfarcts
-* Microinfarcts is a project for loacting the real location of beads inside the brain and use ANTs to align the brain into Allen atlas. 
+* Microinfarcts is a project for registering the beads in a stack of brain tissues into a standard Allen Atlas. 
 After going through the whole process, you will be able to get 
 * 1. A csv file indicating the number of micro infarcts located in different brain regions.
-* 2. A opencv window showing the standard atlas, symmerically normalized brain images and the location of the micro infarcts. 
+* 2. The tree structure in both text format and image format.
+* 3. You can also get an opencv window showing the standard atlas, symmerically normalized brain images and the location of the micro infarcts. 
 * ![opencv window](https://github.com/SilasiLab/microinfarcts/blob/master/pics/show.png)
 * You will be able to ajust the transparency using the buttons `q(-)` and `e(+)`, and also position the image using the buttons `a (previous imgae)` and `d (next image)`.
 * The reference atlas comes from Allen Atlas organization. You can find reference data on google drive link attached here:(https://drive.google.com/a/uottawa.ca/file/d/1gWY_0LZDIYWut7o2haSa0zM-XRKGQxO_/view?usp=sharing)

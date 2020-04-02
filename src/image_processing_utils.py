@@ -14,11 +14,11 @@ import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from tifffile import imsave
+from tifffile import imsave, imread
 import pickle as pk
 from present import show_img, merge_layers, load_img
 from bead_finder import save_bead_mask
-from ants_utils import quick, apply_transform
+from ants_utils import pyAntsReg,  pyAntsApp
 import scipy.fftpack as fp
 import pandas as pd
 from tqdm import tqdm
@@ -465,6 +465,8 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
     :return:
     '''
     img_frame = cv2.cvtColor(img_frame, cv2.COLOR_BGR2GRAY)
+    tissue_frame = copy.deepcopy(img_frame)
+
     threshold = get_adaptive_threshold(img_frame)
     ret, th = cv2.threshold(img_frame, threshold, 255, cv2.THRESH_BINARY)
 
@@ -473,7 +475,7 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
     th = cv2.erode(th, kernel, iterations=2)
     _, contours, _ = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    tissue_frame = img_frame.copy()
+    
 
     # show_img(th, False)
 
@@ -488,9 +490,9 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
                 tissue_frame[:, x + w:] = 0
                 tissue_frame[0:y, :] = 0
                 tissue_frame[y + h:, :] = 0
-                mask = np.zeros(tissue_frame.shape).astype(np.uint8)
-                cv2.drawContours(mask, [contours[i]], -1, 255, -1)
-                tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+                # mask = np.zeros(tissue_frame.shape).astype(np.uint8)
+                # cv2.drawContours(mask, [contours[i]], -1, 255, -1)
+                # tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
                 if show:
                     print("normal")
                     cv2.rectangle(tissue_frame, (x, y), (x + w, y + h), (255, 255, 0), 5)
@@ -860,18 +862,25 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=True, registration=F
         output_dir = os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i)
 
         if registration and registration_flag:
-            quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
-
+            # quick(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
+            # slow(atlas_dir, tissue_dir, output_dir, ANTs_script=Ants_script)
+            reg = pyAntsReg(fixed_image=atlas_dir, moving_image=tissue_dir, output_prefix=output_dir)
         transforms = [os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '0GenericAffine.mat'),
                       os.path.join(save_directory, 'output' + os.sep + 'output_%d_' % i + '1Warp.nii.gz')]
         bead_dir = os.path.join(save_directory, 'bead' + os.sep + '%d.tif' % i)
 
         if app_tran:
-            apply_transform(bead_dir, atlas_dir, transforms, os.path.join(save_directory, "post_bead" + os.sep + "%d.nii" % i))
-            apply_transform(tissue_dir, atlas_dir, transforms, os.path.join(save_directory, "post_tissue" + os.sep + "%d.nii"%i))
-
+            # bead_output_dir = "post_bead" + os.sep + "%d.nii" % i
+            # tissue_output_dir = "post_tissue" + os.sep + "%d.nii"%i
+            # apply_transform(bead_dir, atlas_dir, transforms, os.path.join(save_directory, "post_bead" + os.sep + "%d.nii" % i))
+            # apply_transform(tissue_dir, atlas_dir, transforms, os.path.join(save_directory, "post_tissue" + os.sep + "%d.nii"%i))
+            bead_output_dir = os.path.join(save_directory, "post_bead" + os.sep + "%d.npy" % i)
+            tissue_output_dir = os.path.join(save_directory, "post_tissue" + os.sep + "%d.npy"%i)
+            pyAntsApp(reg=reg, fixed_image=atlas_dir, moving_image=bead_dir, output_filename=bead_output_dir)
+            pyAntsApp(reg=reg, fixed_image=atlas_dir, moving_image=tissue_dir, output_filename=tissue_output_dir)
         if write_summary and not show:
-            bead = load_img(os.path.join(save_directory, "post_bead", "%d.nii"%i), 'nii')
+            # bead = load_img(os.path.join(save_directory, "post_bead", "%d.nii"%i), 'nii')
+            bead = load_img(os.path.join(save_directory, "post_bead", "%d.tif"%i), 'tif')
             ann = np.load(os.path.join(save_directory, "ann", "%d.npy" % i))
             result_dict = summary_single_section(result_dict, bead, ann)
 
@@ -909,7 +918,8 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=True, registration=F
 
     if show:
         if not show_atlas:
-            merge_layers(brain_name, save_dir, 'nii', 'nii', 'npy', intro)
+            # merge_layers(brain_name, save_dir, 'nii', 'nii', 'npy', intro)
+            merge_layers(brain_name, save_dir, 'tif', 'tif', 'npy', intro)
         else:
             merge_layers(brain_name, save_dir, 'nii', 'nii', 'tif', intro)
 

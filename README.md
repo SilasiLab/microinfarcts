@@ -28,7 +28,7 @@ After going through the whole process, you will be able to get
        
 
 ## 2. Preparatory phase
-  * 1. For the input raw data, the input folder directory structure should be: `[Your folder containing all the brains]/[brain id](individual brain)/raw/[images_b.jpg]`. Images should all have a postfix `b` (`imageid_b`, e.g.) which indicates color channel blue.
+  * 1. For the input raw data, the input folder directory structure should be: `[Your folder containing all the brains]/[brain id](individual brain)/raw/[images.jpg]`. Naming convention for the images should be: `prefix_hour:minute:second_b.jpg`. For example: `03-03-2020_15:16:31_b.jpg`. Notice that the images should have a time order. The time means when the section was cut and it will be used to sort in the script.
   * 2. You will need a folder to save the result as also. Feel free to create your own folders.
   
 ## 3. User guide

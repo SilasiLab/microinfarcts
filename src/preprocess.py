@@ -119,7 +119,7 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
     img_paths_color = [os.path.join(input_folder, item) for item in os.listdir(input_folder)
                  if item.endswith('_%s.jpg' % color_channel)]
     img_paths_single = [os.path.join(input_folder, item) for item in os.listdir(input_folder)
-                    if item.endswith('.jpg' % color_channel)]
+                    if item.endswith('.jpg')]
     
     if len(img_paths_color) == 0:
         img_paths = img_paths_single

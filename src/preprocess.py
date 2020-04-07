@@ -116,15 +116,27 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
     '''
     color_channel_dict = {'b': 0, 'g': 1, 'r': 2}
 
-    img_paths = [os.path.join(input_folder, item) for item in os.listdir(input_folder)
+    img_paths_color = [os.path.join(input_folder, item) for item in os.listdir(input_folder)
                  if item.endswith('_%s.jpg' % color_channel)]
+    img_paths_single = [os.path.join(input_folder, item) for item in os.listdir(input_folder)
+                    if item.endswith('.jpg' % color_channel)]
+    
+    if len(img_paths_color) == 0:
+        img_paths = img_paths_single
+    else:
+        img_paths = img_paths_color
 
     def sort_key(item):
         item = os.path.basename(item)
-        hour = int(item.split('.')[0].split(':')[0].split('_')[1])
-        min = int(item.split('.')[0].split(':')[1])
-        sec = int(item.split('.')[0].split(':')[2].split('_')[0])
-        return ((hour * 100) + min) * 100 + sec
+        hms_string = item.split('.')[0].split('_')[1]
+        if ":" in hms_string:
+            hour = int(item.split('.')[0].split(':')[0].split('_')[1])
+            min = int(item.split('.')[0].split(':')[1])
+            sec = int(item.split('.')[0].split(':')[2].split('_')[0])
+            return ((hour * 100) + min) * 100 + sec
+        else:
+            return int(hms_string)
+
     img_paths.sort(key=sort_key)
 
     # raw_images = [cv2.imread(item) for item in img_paths]

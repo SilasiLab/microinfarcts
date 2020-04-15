@@ -150,10 +150,10 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
     affine_dict = {}
     critical_line = Line()
     vertical_line = Line()
-    manual_dict = {status.point1: "the point matches the previous image",
-                   status.point2: "the point matches the next image",
-                   status.vertical_line: "a vertical line from top to bottom",
-                   status.critical_line: "the critical line in brain"}
+    manual_dict = {status.point1: "the point matching previous image",
+                   status.point2: "a point that matched the next image",
+                   status.vertical_line: "a vertical line (top to bottom) delineating hemispheres",
+                   status.critical_line: "a horizontal line through the posterior portion of the anterior commissure"}
     color_dict = {
                     status.point1: (255, 0, 0),
                     status.point2: (0, 255, 0),
@@ -197,28 +197,29 @@ def prepare_tissue_image(input_folder, output_folder, color_channel="b", section
                 cv2.line(canvas, (affine_dict[pos].ponit2.x, affine_dict[pos].ponit2.y),
                          (affine_dict[pos].ponit2.x, affine_dict[pos].ponit2.y), (0, 255, 0), thickness=5)
 
-            cv2.putText(canvas, "Pos: %3d" % pos, (50, 50),
+            cv2.putText(canvas, "Section: %3d" % pos, (50, 50),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
             for key in color_dict.keys():
                 color_dict[key] = (85, 85, 85)
             color_dict[status_dict[pos]] = (0, 255, 0)
+            frontscale=0.7
+            
+            cv2.putText(canvas, '''1. Select %s, "p" to save''' % manual_dict[status.point1], (50, 80),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.point1], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''2. Select %s, "p" to save''' % manual_dict[status.point2], (50, 110),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.point2], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''3. Draw %s, "p" to save''' % manual_dict[status.vertical_line], (50, 140),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.vertical_line], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''4. Draw %s, "p" to save''' % manual_dict[status.critical_line], (50, 170),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.critical_line], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''5. Press "Q" to save all points and calibrate''', (50, 200),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.critical_line], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''6. Press "E" to erase last point''', (50, 230),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.critical_line], 2, cv2.LINE_AA)
 
-            cv2.putText(canvas, "1. Draw %s, press p to save" % manual_dict[status.point1], (50, 80),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.point1], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "2. Draw %s, press p to save" % manual_dict[status.point2], (50, 110),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.point2], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "3. Draw %s, press p to save" % manual_dict[status.vertical_line], (50, 140),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.vertical_line], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "4. Draw %s, press p to save" % manual_dict[status.critical_line], (50, 170),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "5. Press Q to save all and start to calibrate", (50, 200),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
-            cv2.putText(canvas, "6. Press E to erase current point", (50, 230),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
-
-            cv2.putText(canvas, "Others: Press A and D to go previous or next", (50, 260),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color_dict[status.critical_line], 2, cv2.LINE_AA)
+            cv2.putText(canvas, '''Press "A" or "D" to go to previous or next section''', (50, 260),
+                        cv2.FONT_HERSHEY_SIMPLEX, frontscale, color_dict[status.critical_line], 2, cv2.LINE_AA)
             cv2.imshow("Window", canvas)
 
             key = cv2.waitKey(20)

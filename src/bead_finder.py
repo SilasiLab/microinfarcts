@@ -120,7 +120,7 @@ def find_real_bead(data_frame, deliation_factor=10, pixel2mm = 0.005464, toleran
 
                     layer.sort(key=distance_key)
 
-                    print(layer)
+                    # print(layer)
 
                     if len(layer) == 0:
                         bead.disconnected_number += 1

@@ -6,8 +6,8 @@ github: alchemistWu0521@gmail.com
 Organization: Silasi Lab
 '''
 # The pixel poistion of the original point in allen atlas
-ATLAS_CERTER_POSITION = (214, 229, 206)
-ATLAS_CERTER_POSITION_DICT = {25: (214, 229, 206), 50: (107, 114, 103), 100: (54, 57, 52)}
+ATLAS_CERTER_POSITION = (217, 229, 206)
+ATLAS_CERTER_POSITION_DICT = {25: (217, 229, 206), 50: (109, 114, 103), 100: (55, 57, 52)}
 BRAIN_THICKNESS = 8500
 BRAIN_PIXEL_THICKNESS = 528
 import cv2
@@ -581,7 +581,7 @@ def save_pair_images(img_dir, save_dir="/home/silasi/ants_data/name", section_th
     '''
 
     step_length = float(section_thickness) / float(section_thickness_for_all)
-
+    print("section_thickness", section_thickness, "section_thickness_for_all", section_thickness_for_all, "step_length", step_length)
     def z_key(elem):
         return float(elem.split(',')[-1].strip().split('.tif')[0])
     tif_list = os.listdir(img_dir)

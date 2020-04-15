@@ -17,9 +17,10 @@ class StartWindow(QMainWindow):
     """
     def __init__(self):
         super().__init__()
-        self.root_dir = "/mnt/4T/brain_imgs/"
-        self.save_dir = "/mnt/4T/brain_result/"
+        self.root_dir = os.getcwd()
+        self.save_dir = os.getcwd()
         self.script_dir = "/home/silasi/ANTs/Scripts"
+        # self.script_dir = os.getcwd()
 
         self.widget_main = QWidget()
         self.layout_main = QGridLayout()
@@ -32,22 +33,26 @@ class StartWindow(QMainWindow):
 
         self.buttonGroupWrite = QButtonGroup(self.widget_main)
         self.radio_write = QRadioButton("Write a sumarry")
-        self.radio_show = QRadioButton("Show the result (For debugging)")
+        self.radio_show = QRadioButton("Show results visually")
         self.buttonGroupWrite.addButton(self.radio_write)
         self.buttonGroupWrite.addButton(self.radio_show)
         self.radio_write.setChecked(True)
 
         self.buttonGroupAutoSeg = QButtonGroup(self.widget_main)
-        self.radio_auto = QRadioButton("Auto Beads Labeling")
-        self.radio_man = QRadioButton("Manual Beads Labeling")
+        self.radio_auto = QRadioButton("Automatically detect microspheres")
+        self.radio_man = QRadioButton(" Count microspheres manually")
         self.radio_auto.setChecked(True)
 
-        self.labelRootDir = QLabel("Select root directory containing all the brain folders")
+        self.labelnote = QLabel("*make sure images are saved in the correct directory path (i.e. images/brain1/raw/)")
+        self.labelnote2 = QLabel("*Select which analysis step you wish to perform")
+        self.labelnote3 = QLabel("*Select the root directory")
+
+        self.labelRootDir = QLabel("Select root directory containing serial brain images. (i.e. images/)")
         self.btnRootDir = QPushButton('Select')
         self.btnRootDir.clicked.connect(self.select_rootDir)
         self.lineRootDir = QLabel(self.root_dir)
 
-        self.labelSaveDir = QLabel("Select directory to save results")
+        self.labelSaveDir = QLabel("Select directory to save results (different from root directory)")
         self.btnSaveDir = QPushButton('Select')
         self.btnSaveDir.clicked.connect(self.select_saveDir)
         self.lineSaveDir = QLabel(self.save_dir)
@@ -61,40 +66,41 @@ class StartWindow(QMainWindow):
         self.btnRun.clicked.connect(self.analyse)
 
         self.thickness_label = QLabel(self)
-        self.thickness_label.setText('                                                                      Thickness:')
-        # self.thickness_line = QLineEdit(self)
+        self.thickness_label.setText('                                                                       Section thickness:')
         self.thickness_combo = QComboBox(self)
         self.thickness_combo.addItem("25")
         self.thickness_combo.addItem("50")
         self.thickness_combo.addItem("100")
 
+        self.layout_main.addWidget(self.labelnote, 0, 0)
+        self.layout_main.addWidget(self.labelRootDir, 1, 0)
+        self.layout_main.addWidget(self.lineRootDir, 2, 0)
+        self.layout_main.addWidget(self.btnRootDir, 2, 1)
 
-        self.layout_main.addWidget(self.labelRootDir, 0, 0)
-        self.layout_main.addWidget(self.lineRootDir, 1, 0)
-        self.layout_main.addWidget(self.btnRootDir, 1, 1)
+        self.layout_main.addWidget(self.labelSaveDir, 3, 0)
+        self.layout_main.addWidget(self.lineSaveDir, 4, 0)
+        self.layout_main.addWidget(self.btnSaveDir, 4, 1)
 
-        self.layout_main.addWidget(self.labelSaveDir, 2, 0)
-        self.layout_main.addWidget(self.lineSaveDir, 3, 0)
-        self.layout_main.addWidget(self.btnSaveDir, 3, 1)
+        self.layout_main.addWidget(self.labelScriptDir, 5, 0)
+        self.layout_main.addWidget(self.lineScriptDir, 6, 0)
+        self.layout_main.addWidget(self.btnScriptDir, 6, 1)
 
-        self.layout_main.addWidget(self.labelScriptDir, 4, 0)
-        self.layout_main.addWidget(self.lineScriptDir, 5, 0)
-        self.layout_main.addWidget(self.btnScriptDir, 5, 1)
+        self.layout_main.addWidget(self.labelnote2, 7, 0)
+        self.layout_main.addWidget(self.radio_show, 8, 0)
+        self.layout_main.addWidget(self.radio_write, 8, 1)
 
-        self.layout_main.addWidget(self.radio_show, 6, 0)
-        self.layout_main.addWidget(self.radio_write, 6, 1)
+        self.layout_main.addWidget(self.radio_auto, 9, 0)
+        self.layout_main.addWidget(self.radio_man, 9, 1)
 
-        self.layout_main.addWidget(self.radio_auto, 7, 0)
-        self.layout_main.addWidget(self.radio_man, 7, 1)
+        self.layout_main.addWidget(self.labelnote3, 10, 0)
+        self.layout_main.addWidget(self.allList, 11, 0)
+        self.layout_main.addWidget(self.btnAdd, 11, 1)
+        self.layout_main.addWidget(self.analyseList, 11, 2)
 
-        self.layout_main.addWidget(self.allList, 8, 0)
-        self.layout_main.addWidget(self.btnAdd, 8, 1)
-        self.layout_main.addWidget(self.analyseList, 8, 2)
+        self.layout_main.addWidget(self.thickness_label, 12, 0)
 
-        self.layout_main.addWidget(self.thickness_label, 9, 0)
-
-        self.layout_main.addWidget(self.thickness_combo, 9, 1)
-        self.layout_main.addWidget(self.btnRun, 9, 2)
+        self.layout_main.addWidget(self.thickness_combo, 12, 1)
+        self.layout_main.addWidget(self.btnRun, 12, 2)
 
         self.setCentralWidget(self.widget_main)
         self.update_list()
@@ -135,6 +141,7 @@ class StartWindow(QMainWindow):
 
     def analyse(self):
         self.thickness = int(str(self.thickness_combo.currentText()))
+        print(self.thickness)
         for brain_dir in [str(self.analyseList.item(i).text()) for i in range(self.analyseList.count())]:
             run_one_brain(brain_dir, self.save_dir, True, True, self.script_dir, True, self.radio_write.isChecked(),
                           self.radio_show.isChecked(), False, False, self.radio_auto.isChecked(),

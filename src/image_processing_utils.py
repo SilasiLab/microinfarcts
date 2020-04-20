@@ -69,6 +69,11 @@ def remove_background(img_frame):
                 mask = np.zeros(tissue_frame.shape).astype(np.uint8)
                 cv2.drawContours(mask, [contours[i]], -1, 255, -1)
                 tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+
+                # convex_contours = cv2.convexHull(contours[i])
+                # mask = np.zeros(tissue_frame.shape).astype(np.uint8)
+                # cv2.drawContours(mask, [convex_contours], -1, 255, -1)
+                # tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
     return tissue_frame
 
 def read_img(file_path):
@@ -493,6 +498,10 @@ def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
                 # mask = np.zeros(tissue_frame.shape).astype(np.uint8)
                 # cv2.drawContours(mask, [contours[i]], -1, 255, -1)
                 # tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+                convex_contours = cv2.convexHull(contours[i])
+                mask = np.zeros(tissue_frame.shape).astype(np.uint8)
+                cv2.drawContours(mask, [convex_contours], -1, 255, -1)
+                tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
                 if show:
                     print("normal")
                     cv2.rectangle(tissue_frame, (x, y), (x + w, y + h), (255, 255, 0), 5)

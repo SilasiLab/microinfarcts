@@ -62,13 +62,13 @@ def remove_background(img_frame):
             point_t = (int(x_t + 0.5 * w_t), int(y_t + 0.5 * h_t))
             if is_in_center(point_t, tissue_frame):
                 x, y, w, h = cv2.boundingRect(contours[i])
-                tissue_frame[:, 0: x] = 0
-                tissue_frame[:, x + w:] = 0
-                tissue_frame[0:y, :] = 0
-                tissue_frame[y + h:, :] = 0
+                tissue_frame[:, 0: x - 75] = 0
+                tissue_frame[:, x + w + 75:] = 0
+                tissue_frame[0:y - 75, :] = 0
+                tissue_frame[y + h + 75:, :] = 0
                 mask = np.zeros(tissue_frame.shape).astype(np.uint8)
                 cv2.drawContours(mask, [contours[i]], -1, 255, -1)
-                tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+                # tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
 
                 # convex_contours = cv2.convexHull(contours[i])
                 # mask = np.zeros(tissue_frame.shape).astype(np.uint8)
@@ -185,7 +185,7 @@ def show_imgs(img_list):
     plt.axis('off')
     plt.show()
 
-def locate_beads(img_path_list, output_csv_folder):
+def locate_beads(img_path_list, output_csv_folder, debug=False):
     """
     integrated processes for automatically locating the beads in the images.
     :param img_path_list: a list of aligned images
@@ -202,10 +202,15 @@ def locate_beads(img_path_list, output_csv_folder):
         z = key(img_path)
         img = read_img(img_path)
         img = remove_background(img)
+        if debug:
+            show_img = copy.deepcopy(img)
+
         xy_list = fft(img, 30, 30, show=False)
         for tu in xy_list:
             centre_point = (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5))
             pixel_value = img[tu[1], tu[0]]
+            if debug:
+                cv2.circle(show_img, (tu[0], tu[1]), 6, (255, 255, 255), thickness=2, lineType=8)
             tu = pixel2mm(tu, centre_point)
             tu.append(z)
             data_dict["Animal ID"].append(animal_id)
@@ -215,6 +220,10 @@ def locate_beads(img_path_list, output_csv_folder):
             data_dict["Z"].append(tu[2])
             data_dict["Bead Area"].append(0)
             data_dict["Bead Circularity"].append(0)
+        if debug:
+            show_img = cv2.resize(show_img, (show_img.shape[0] // 2, show_img.shape[1] // 2))
+            cv2.imshow('test', show_img)
+            cv2.waitKey()
     df = pd.DataFrame.from_dict(data_dict)
     df.to_csv(os.path.join(output_csv_folder, 'auto_segmentation.csv'), index=False)
 
@@ -443,6 +452,45 @@ def get_pure_brain_atlas(atlas_frame, refactored_atlas_center=None, threshold=10
     # return atlas_frame, atlas_center, (row1, row2, col1, col2)
     return atlas_frame, (row1, row2, col1, col2)
 
+# def get_adaptive_threshold(img_gray, show=False):
+#     '''
+#     Using the hist diagram to calculate the adaptive threshold of binarizing th image
+#     :param img_gray: single channel gray image
+#     :param show: if show is true, it will open a window containing the hist diagram
+#     :return: Adapative threshold value
+#     '''
+#     hist_full = cv2.calcHist([img_gray], [0], None, [256], [0, 256])
+#     if show:
+#         plt.plot(hist_full)
+#         plt.show()
+#     hist_ave = sum(hist_full[1:]) / 255.
+#     window_size = 5
+#     for i in range(10, 50):
+#         temp = hist_full[i: i + window_size].reshape((window_size  , ))
+        
+#         if np.average(np.gradient(temp)) >= 0 and (temp.sum() / float(window_size)) < hist_ave:
+#             return i
+#     return 25
+# def get_adaptive_threshold(img_gray, show=False):
+#     '''
+#     Using the hist diagram to calculate the adaptive threshold of binarizing th image
+#     :param img_gray: single channel gray image
+#     :param show: if show is true, it will open a window containing the hist diagram
+#     :return: Adapative threshold value
+#     '''
+#     hist_full = cv2.calcHist([img_gray], [0], None, [256], [0, 256])
+#     if show:
+#         plt.plot(hist_full)
+#         plt.show()
+#     hist_ave = sum(hist_full[1:]) / 255.
+#     window_size = 5
+#     for i in range(10, 50):
+#         temp = hist_full[i: i + window_size].reshape((window_size  , ))
+        
+#         if np.average(np.gradient(temp)) >= 0 and (temp.sum() / float(window_size)) < hist_ave:
+#             return i
+#     return 25
+
 def get_adaptive_threshold(img_gray, show=False):
     '''
     Using the hist diagram to calculate the adaptive threshold of binarizing th image
@@ -450,62 +498,98 @@ def get_adaptive_threshold(img_gray, show=False):
     :param show: if show is true, it will open a window containing the hist diagram
     :return: Adapative threshold value
     '''
-    hist_full = cv2.calcHist([img_gray], [0], None, [256], [0, 256])
-    if show:
-        plt.plot(hist_full)
-        plt.show()
-    hist_ave = sum(hist_full[1:]) / 255.
-    window_size = 5
-    for i in range(10, 50):
-        temp = hist_full[i: i + window_size].reshape((window_size  , ))
-        if np.gradient(temp).max() < 0 and (temp.sum() / float(window_size)) < hist_ave:
-            return i
-    return 25
+    width, height = img_gray.shape[0], img_gray.shape[1]
+    window = 20
+    mid_height = int(height * 0.5)
+    thresholds = []
+    start_point = 300
+    for i in range(start_point, height - start_point, window):
+        sample = img_gray[start_point: width - start_point, i: i + window]
+        sample = np.average(sample, axis=-1)
+        gradient = np.gradient(sample)
+        largest_gradient = np.max(gradient)
+        threshold = sample[np.where(gradient==largest_gradient)][0]
+        if threshold < 200:
+            thresholds.append(threshold)
 
-def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False):
+    print(int(np.average(thresholds)))
+    return int(np.average(thresholds))
+    # return 28
+
+def preprocess_pair(img_frame, atlas_frame, ann_frame, show=False, strict=0.):
     '''
     Transform the position of the brain in the atlas frame to adapt image frame
     :param img_frame:
     :param atlas_frame:
     :return:
     '''
+    assert strict <= 1.0 and strict >= 0.
     img_frame = cv2.cvtColor(img_frame, cv2.COLOR_BGR2GRAY)
     tissue_frame = copy.deepcopy(img_frame)
 
     threshold = get_adaptive_threshold(img_frame)
     ret, th = cv2.threshold(img_frame, threshold, 255, cv2.THRESH_BINARY)
 
-
     kernel = np.ones((7, 7), np.uint8)
     th = cv2.erode(th, kernel, iterations=2)
     _, contours, _ = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+    contours.sort(key=cv2.contourArea)
     
-
     # show_img(th, False)
+    # show_frame = copy.deepcopy(img_frame)
+    # show_frame = cv2.cvtColor(show_frame, cv2.COLOR_GRAY2RGB)
+    
 
     for i in range(len(contours)):
         if cv2.contourArea(contours[i]) > 2e5 and cv2.contourArea(contours[i]) < 5e6:
-            x_t, y_t, w_t, h_t = cv2.boundingRect(contours[i])
-            point_t = (int(x_t + 0.5 * w_t), int(y_t + 0.5 * h_t))
+            # x_t, y_t, w_t, h_t = cv2.boundingRect(contours[i])
+            # point_t = (int(x_t + 0.5 * w_t), int(y_t + 0.5 * h_t))
 
-            if is_in_center(point_t, tissue_frame):
+            M = cv2.moments(contours[i])
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+
+            # show_frame = cv2.drawContours(show_frame, [contours[i]], 0, (0,255,0), 3)
+            # show_frame = cv2.circle(show_frame, (cX, cY), 3, (0, 0, 255), 3) 
+
+            if is_in_center((cX, cY), tissue_frame):
                 x, y, w, h = cv2.boundingRect(contours[i])
-                tissue_frame[:, 0: x] = 0
-                tissue_frame[:, x + w:] = 0
-                tissue_frame[0:y, :] = 0
-                tissue_frame[y + h:, :] = 0
+                
+                # cv2.rectangle(show_frame, (x - 75, y - 75), (x + w + 150, y + h + 150), (255, 0, 0), thickness=3, lineType=8)
+                # show_img(th, False)
+                
+                
+                # convex_contours = cv2.convexHull(contours[i])
                 # mask = np.zeros(tissue_frame.shape).astype(np.uint8)
-                # cv2.drawContours(mask, [contours[i]], -1, 255, -1)
+                # cv2.drawContours(mask, [convex_contours], -1, 255, -1)
                 # tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
-                convex_contours = cv2.convexHull(contours[i])
-                mask = np.zeros(tissue_frame.shape).astype(np.uint8)
-                cv2.drawContours(mask, [convex_contours], -1, 255, -1)
-                tissue_frame = cv2.bitwise_and(tissue_frame, tissue_frame, mask=mask)
+                
+                color_frame = cv2.cvtColor(tissue_frame, cv2.COLOR_GRAY2RGB)
+                # rect = (x, y, w + x, h + y)
+                rect = (x - 75, y - 75, w + 150, h + 150)
+                mask = np.zeros(tissue_frame.shape,np.uint8)
+
+                bgdModel = np.zeros((1,65),np.float64)
+                fgdModel = np.zeros((1,65),np.float64)
+                
+                cv2.grabCut(color_frame, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+                # mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+                mask2 = np.where((mask==2)|(mask==0), 1.0 - strict, 1)
+                
+                tissue_frame[:, 0: x - 75] = 0
+                tissue_frame[:, x + w + 75:] = 0
+                tissue_frame[0:y - 75, :] = 0
+                tissue_frame[y + h + 75:, :] = 0
+
+                tissue_frame = tissue_frame * mask2[:,:]
+                tissue_frame = np.asarray(tissue_frame).astype(np.uint8)
+
                 if show:
                     print("normal")
                     cv2.rectangle(tissue_frame, (x, y), (x + w, y + h), (255, 255, 0), 5)
                     show_img(tissue_frame, False)
+
+    # show_img(tissue_frame, False)
 
     atlas_frame = np.asarray(atlas_frame, dtype=np.float32)
     atlas_frame = ((atlas_frame - atlas_frame.min()) / (atlas_frame.max() - atlas_frame.min())) * 255
@@ -581,7 +665,7 @@ def calculate_shift(img_dir, step_length):
     shift = ATLAS_CERTER_POSITION[0] - (index * step_length)
     return shift
 
-def save_pair_images(img_dir, save_dir="/home/silasi/ants_data/name", section_thickness=100, section_thickness_for_all=25):
+def save_pair_images(img_dir, save_dir="/home/silasi/ants_data/name", section_thickness=100, section_thickness_for_all=25, strict=0.):
     '''
     save the pair of images in to specific folder.
     :param img_dir:
@@ -639,7 +723,7 @@ def save_pair_images(img_dir, save_dir="/home/silasi/ants_data/name", section_th
         ann_frame = atlas_dict_data[atlas_index]
         ann_frame = np.asarray(ann_frame, dtype=np.uint16)
 
-        tissue_frame, canvas_atlas, canvas_ann = preprocess_pair(img_frame, atlas_frame, ann_frame, False)
+        tissue_frame, canvas_atlas, canvas_ann = preprocess_pair(img_frame, atlas_frame, ann_frame, False, strict)
 
         canvas_atlas = cv2.resize(canvas_atlas, (int(canvas_atlas.shape[1] * 0.5), int(canvas_atlas.shape[0] * 0.5)))
         imsave(os.path.join(save_dir_atlas, '%d.tif' % i), canvas_atlas)
@@ -825,7 +909,8 @@ def draw_tree_graph(csv_dict, save_directory, query_dict):
 def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=True, registration=False,
          Ants_script="/home/silasi/ANTs/Scripts",
          app_tran=False, write_summary=False, show=False,
-         show_atlas=False, intro=True, auto_seg=True, section_thickness=100, section_thickness_for_all=25):
+         show_atlas=False, intro=True, auto_seg=True, section_thickness=100, section_thickness_for_all=25,
+         strict=0.):
     """
     Show function is not compatible with writing csv funtion. Do one thing at a time.
     :param brain_dir: Directory for handling the brain you would like to analyse.
@@ -858,7 +943,7 @@ def run_one_brain(brain_dir, save_dir, prepare_atlas_tissue=True, registration=F
     save_bead_mask(save_directory, os.path.join(brain_dir), show_circle=show, auto=auto_seg)
     if prepare_atlas_tissue:
         prepare_atlas(section_thickness_for_all=section_thickness_for_all)
-        save_pair_images(img_dir, save_dir=save_directory, section_thickness=section_thickness, section_thickness_for_all=section_thickness_for_all)
+        save_pair_images(img_dir, save_dir=save_directory, section_thickness=section_thickness, section_thickness_for_all=section_thickness_for_all, strict=strict)
 
     result_dict = None
     length = len(os.listdir(os.path.join(save_directory, 'atlas')))

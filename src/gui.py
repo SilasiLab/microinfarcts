@@ -2,7 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QLabel,
                              QGridLayout, QHBoxLayout, QComboBox, QCalendarWidget, QListWidget,
                              QSlider, QMessageBox, QRadioButton, QButtonGroup, QDialog, QFileDialog,
-                             QLineEdit)
+                             QLineEdit, QInputDialog)
 from PyQt5.QtCore import *
 import threading
 import traceback, sys
@@ -141,11 +141,15 @@ class StartWindow(QMainWindow):
 
     def analyse(self):
         self.thickness = int(str(self.thickness_combo.currentText()))
-        print(self.thickness)
+        d, okPressed = QInputDialog.getDouble(self, "How strict you would like to calculate the edge?","Value(between 0 and 1):", 0., 0., 1., 2)
+        if okPressed:
+            strict = float(d)
+        else:
+            strict = 0.
         for brain_dir in [str(self.analyseList.item(i).text()) for i in range(self.analyseList.count())]:
             run_one_brain(brain_dir, self.save_dir, True, True, self.script_dir, True, self.radio_write.isChecked(),
                           self.radio_show.isChecked(), False, False, self.radio_auto.isChecked(),
-                          section_thickness=self.thickness)
+                          section_thickness=self.thickness, strict=strict)
 
 
 

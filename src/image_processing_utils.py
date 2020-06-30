@@ -205,7 +205,7 @@ def locate_beads(img_path_list, output_csv_folder, debug=False):
         if debug:
             show_img = copy.deepcopy(img)
 
-        xy_list = fft(img, 30, 30, show=False)
+        xy_list = fft(img, 40, 40, show=False)# used to be 40 40.
         for tu in xy_list:
             centre_point = (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5))
             pixel_value = img[tu[1], tu[0]]
